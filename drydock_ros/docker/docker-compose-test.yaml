@@ -1,0 +1,11 @@
+version: '3'
+
+
+services:
+  drydock_test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    restart: on-failure
+    image: lcas.lincoln.ac.uk/lcas/drydock_ros:test
+    command: roslaunch mqtt_bridge 
