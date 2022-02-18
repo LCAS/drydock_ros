@@ -4,6 +4,9 @@
   <arg name="mqtt_bridge_ip" default="$(optenv MQTT_BRIDGE_IP 127.0.0.1)" />
   <arg name="mqtt_bridge_port" default="$(optenv MQTT_BRIDGE_PORT 5232)" />
   <arg name="launch_mosquitto" default="true" />
+  <arg name="action_prefix" default="/scene_analyser" />
+  <arg name="action_type" default="scene_analyser.msg:semantic_segmentationAction" />
+
 
   <!-- the control port for the dynamic server -->
   <arg name="control_topic" default="__drydock_dynamic_server" />
@@ -28,6 +31,41 @@ bridge:
   # Dynamic Connection Server
   - factory: mqtt_bridge.bridge:DynamicBridgeServer
     control_topic: '$(arg control_topic)'
+  ### OUTGOING from server
+  # Status
+  - factory: mqtt_bridge.bridge:RosToMqttBridge
+    msg_type: 'actionlib_msgs.msg:GoalStatusArray'
+    topic_from: '$(arg action_prefix)/status'
+    topic_to: '$(arg action_prefix)/status'
+    latched: false
+    qos: 0
+  # Result
+  - factory: mqtt_bridge.bridge:RosToMqttBridge
+    msg_type: '$(arg action_type)Result'
+    topic_from: '$(arg action_prefix)/result'
+    topic_to: '$(arg action_prefix)/result'
+    latched: false
+    qos: 2
+  # Feedback
+  - factory: mqtt_bridge.bridge:RosToMqttBridge
+    msg_type: '$(arg action_type)Feedback'
+    topic_from: '$(arg action_prefix)/feedback'
+    topic_to: '$(arg action_prefix)/feedback'
+    latched: false
+    qos: 0
+  ### INCOMING to server
+  - factory: mqtt_bridge.bridge:MqttToRosBridge
+    msg_type: '$(arg action_type)Goal'
+    topic_from: '$(arg action_prefix)/goal'
+    topic_to: '$(arg action_prefix)/goal'
+    latched: false
+    qos: 2
+  - factory: mqtt_bridge.bridge:MqttToRosBridge
+    msg_type: 'actionlib_msgs.msg:GoalID'
+    topic_from: '$(arg action_prefix)/cancel'
+    topic_to: '$(arg action_prefix)/cancel'
+    latched: false
+    qos: 2
     </rosparam>
   </node>
 </launch>

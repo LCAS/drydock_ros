@@ -3,6 +3,6 @@
     <include file="$(find drydock_ros)/launch/host.launch" />
     <include file="$(find scene_analyser)/launch/scene_analyser.launch" />
 
-    <node pkg="rostopic" name="rostopic" type="rostopic" args="list" output="screen" respawn="true" />
+    <!--<node pkg="rostopic" name="rostopic" type="rostopic" args="list" output="screen" respawn="true" />-->
 
 </launch>
