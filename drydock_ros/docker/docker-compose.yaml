@@ -1,0 +1,19 @@
+version: '3'
+
+
+services:
+  semantic_segmentation:
+    build:
+      context: ../..
+      dockerfile: drydock_ros/docker/detectron2/melodic/Dockerfile
+    restart: on-failure
+    image: lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_server:melodic
+    ipc: host
+    ports:
+      - 10001:5232
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]    
+
