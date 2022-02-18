@@ -1,0 +1,17 @@
+# goal definition
+# rgb image, depth image, and camera info
+# 'classes' is an array of integers, each integer identifying which class we want in the returned result(s)
+Header header
+sensor_msgs/Image rgb
+sensor_msgs/Image depth
+sensor_msgs/CameraInfo cam_info
+int32[] classes
+---
+# result definition
+# returns an array of depth images, one for each requested class in the same order as specified in 'classes' during the request
+Header header
+sensor_msgs/Image[] depth
+---
+# feedback
+# unused for now. we might change this if the need arises
+int32 unused
