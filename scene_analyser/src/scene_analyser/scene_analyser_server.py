@@ -8,10 +8,11 @@ import scene_analyser.msg as action_msgs
 
 
 class SceneAnalyserActionServer( object ):
-    def __init__( self, task_queue, result_queue ):
+    def __init__( self, action_name="/scene_analyser" ):
+        self._action_name = action_name
         self.action_server = actionlib.SimpleActionServer(
             self._action_name,
-            action_msgs.scene_analyserAction,
+            action_msgs.semantic_segmentationAction,
             execute_cb=self.execute,
             auto_start = False)
         # todo: add any initialization that needs to be done before accepting goals
