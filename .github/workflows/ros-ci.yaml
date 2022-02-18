@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  test_docker: # On Linux, iterates on all ROS 1 and ROS 2 distributions.
+  ros_ci: # On Linux, iterates on all ROS 1 and ROS 2 distributions.
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -40,7 +40,7 @@ jobs:
         if: ${{ matrix.ros_version == 1 }}
         uses: ros-tooling/action-ros-ci@v0.2
         with:
-          package-name: mqtt_bridge
+          package-name: drydock_ros
           target-ros1-distro: ${{ matrix.ros_distribution }}
       - name: build and test ROS 2
         if: ${{ matrix.ros_version == 2 }}
