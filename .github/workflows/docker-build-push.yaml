@@ -40,13 +40,13 @@ jobs:
     #  run: docker build . --file Dockerfile --tag lcas.lincoln.ac.uk/uollcas/teaching:latest
     #- name: Push the Docker image
     #  run: docker push lcas.lincoln.ac.uk/uollcas/teaching:latest
-    - name: Build and push
+    - name: Build and push fastpick-detectron2:melodic-${{ env.BRANCH }}
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./Dockerfile
+        file: ./drydock_ros/docker/detectron2/melodic/Dockerfile
         platforms: linux/amd64
         push: true
-        tags: lcas.lincoln.ac.uk/lcas/bacchus_lcas_teaching:${{ env.BRANCH }}
+        tags: lcas.lincoln.ac.uk/lcas/fastpick-detectron2:melodic-${{ env.BRANCH }}
         build-args: |
             BRANCH=${{ env.BRANCH }}
