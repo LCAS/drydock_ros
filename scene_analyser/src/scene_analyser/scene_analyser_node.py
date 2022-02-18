@@ -45,7 +45,7 @@ class SceneAnalyserNode( object ):
     
     def advertise( self ):
         """ sets up the publisher for the result images """
-        for topic in self.ouput_topics:
+        for topic in self.output_topics:
             self.publisher[topic] = rospy.Publisher( self.topic_prefix + topic, Image )
     
     def callback_rgb( self, msg ):
