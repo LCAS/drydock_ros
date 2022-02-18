@@ -58,13 +58,12 @@ RUN python3 -m venv detectron2_venv --clear --system-site-packages && \
 
 RUN rosdep update
 
-# Docker clean-up
-RUN rm -rf /var/lib/apt/lists/*
-
 CMD ["/bin/bash", "-c"]
 
 ### MQTT
 
-RUN source /opt/ros/melodic/setup.sh && mkdir -p /opt/mqtt_bridge/src && cd /opt/mqtt_bridge/src && catkin_init_workspace . \
-    && git clone https://github.com/LCAS/mqtt_bridge.git && cd .. && catkin_make install
+RUN source /opt/ros/melodic/setup.sh && mkdir -p /opt/fastpick/src && cd /opt/fastpick/src && catkin_init_workspace . \
+    && git clone https://github.com/LCAS/mqtt_bridge.git && git clone https://github.com/LCAS/drydock_ros.git && rosdep install -y -i --from-paths . && cd .. && catkin_make install
 
+# Docker clean-up
+RUN rm -rf /var/lib/apt/lists/*
