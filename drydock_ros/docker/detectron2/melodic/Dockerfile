@@ -56,7 +56,15 @@ RUN python3 -m venv detectron2_venv --clear --system-site-packages && \
     python -m pip install detectron2==0.5 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.8/index.html && \
     pip install --no-cache-dir rospkg
 
+RUN rosdep update
+
 # Docker clean-up
 RUN rm -rf /var/lib/apt/lists/*
 
 CMD ["/bin/bash", "-c"]
+
+### MQTT
+
+RUN source /opt/ros/melodic/setup.sh && mkdir -p /opt/mqtt_bridge/src && cd /opt/mqtt_bridge/src && catkin_init_workspace . \
+    && git clone https://github.com/LCAS/mqtt_bridge.git && cd .. && catkin_make install
+
