@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<launch>
+    <node pkg="scene_analyser" name="scene_analyser_server" type="scene_analyser_server.py" output="screen" respawn="true" />
+</launch>
