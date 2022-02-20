@@ -25,8 +25,8 @@ mqtt:
     port: $(arg mqtt_bridge_port)
     keepalive: 60
 # Default is json serialiser, msgpack is more efficient
-serializer: msgpack:dumps
-deserializer: msgpack:loads
+#serializer: msgpack:dumps
+#deserializer: msgpack:loads
 bridge:
   # Dynamic Connection Server
   - factory: mqtt_bridge.bridge:DynamicBridgeServer
