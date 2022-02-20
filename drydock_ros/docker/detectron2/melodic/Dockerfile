@@ -59,14 +59,14 @@ RUN python3 -m venv detectron2_venv --clear --system-site-packages && \
 RUN rosdep update
 
 ### MQTT
-RUN source /opt/ros/melodic/setup.sh && mkdir -p /opt/fastpick/src && cd /opt/fastpick/src && catkin_init_workspace . \
+RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/fastpick/src && cd /opt/fastpick/src && catkin_init_workspace . \
     && git clone https://github.com/LCAS/mqtt_bridge.git 
 
 RUN apt-get install -y mosquitto-clients mosquitto
 
 COPY . /opt/fastpick/src/drydock_ros    
 # hack required to use Python2 here, change PATH to put /usr/bin first again...
-RUN source /opt/ros/melodic/setup.sh && cd /opt/fastpick/src && rosdep install -y -i --from-paths . && cd .. && PATH=/usr/bin:$PATH catkin_make install
+RUN source /opt/ros/${ROS_DISTRO}/setup.sh && cd /opt/fastpick/src && rosdep install -y -i --from-paths . && cd .. && PATH=/usr/bin:$PATH catkin_make install
 
 # Docker clean-up
 RUN rm -rf /var/lib/apt/lists/*
