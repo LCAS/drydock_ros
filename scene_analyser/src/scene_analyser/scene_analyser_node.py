@@ -3,16 +3,23 @@
 from __future__ import print_function
 
 
+import logging
+import numpy as np
+import cv2
+import cv_bridge
 import rospy
-#import cv2 # opencv python library
-#import numpy as np
 
-try:
-    import Queue as queue # python 2.7
-except:
-    import queue
+#try:
+#    from Queue import Queue # python 2.7
+#except:
+#    from queue import Queue # python 3+
 
 from sensor_msgs.msg import CameraInfo, Image
+
+
+
+from masks_predictor import MasksPredictor, ClassNames
+
 
 
 
@@ -25,10 +32,19 @@ class SceneAnalyserNode( object ):
         self.topic_rgb = rospy.get_param( '~rgb', 'todo_default' )
         self.topic_depth = rospy.get_param( '~depth', 'todo_default' )
         self.topic_cam_info = rospy.get_param( '~camera_info', 'todo_default' )
+        self.bridge = cv_bridge.CvBridge()
+        self.msg_rgb = None
+        self.msg_depth = None
+        self.msg_cam_info = None
+        self.model_file  = './model/fp_ss_model.pth'
+        self.config_file = 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml'
+        self.mask_predictor = None
+        self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
+        self.load_model()
         
         self.output_topics = ( # list of topics that we intent to publish
-            'canopy',
             'berry',
+            'canopy',
             'rigid',
             'background')
         
@@ -36,26 +52,75 @@ class SceneAnalyserNode( object ):
         self.subscribe()
         self.advertise()
     
+    def load_model( self ):
+        """ loads the model for the mask predictor """
+        try:
+            self.mask_predictor = MasksPredictor( self.model_file, self.config_file )
+        except Exception as e:
+            print( 'failed to load mask predictor', e )
+    
     def subscribe( self ):
         """ subscribes to the relevant topics """
-        # todo: setup callback functions for the subscribers and subscribe to the topics
-        rospy.Subscriber(self.topic_rgb, Image, self.callback_rgb )
-        rospy.Subscriber(self.topic_depth, Image, self.callback_depth )
-        rospy.Subscriber(self.topic_cam_info, Image, self.callback_cam_info )
+        rospy.Subscriber( self.topic_rgb, Image, self.callback_rgb )
+        rospy.Subscriber( self.topic_depth, Image, self.callback_depth )
+        rospy.Subscriber( self.topic_cam_info, CameraInfo, self.callback_cam_info )
     
     def advertise( self ):
-        """ sets up the publisher for the result images """
+        """ sets up the ROS publisher for the result images """
         for topic in self.output_topics:
             self.publisher[topic] = rospy.Publisher( self.topic_prefix + topic, Image )
     
+    def publish( self, messages ):
+        """ publishes all messages to the respective topics. expects the messages to be in the same order as self.output_topics """
+        for i in range(len(messages)):
+            self.publisher[self.output_topics[i]].publish( messages[i] )
+    
+    def run( self ):
+        """ starts the prediction process by converting the ROS messages to OpenCV images and passing the data to the predictor """
+        if not self.msg_rgb or not self.msg_depth:
+            return
+        rgbd_image = self.read_message_data()
+        if not rgbd_image:
+            return
+        depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list )
+        messages = [self.bridge.cv_to_imgmsg(mask, "mono8") for mask in depth_masks ]
+        self.publish( messages )
+        self.msg_rgb = None
+        self.msg_depth = None
+    
+    def read_message_data( self ):
+        """ reads the stored ROS image messages. The messages are converted into OpenCV images and merged into an rgbd image which is then returned.
+        returns None on error. """
+        try:
+            cv_rgb = self.bridge.imgmsg_to_cv(self.msg_rgb, "bgr8") # or rgb8
+            if not cv_rgb:
+                raise Exception('cv_rgb error')
+        except:
+            print( 'failed to convert ROS rgb image to OpenCV' )
+            return None
+        try:
+            cv_depth = self.bridge.imgmsg_to_cv(self.msg_depth, "mono8") # alternative: mono16
+            if not cv_depth:
+                raise Exception('cv_depth error')
+        except:
+            print( 'failed to convert ROS depth image to OpenCV' )
+            return None
+        
+        if cv_rgb.shape != cv_depth.shape:
+            print( 'rgb and depth image size mismatch. rgb={}, depth={}'.format(cv_rgb.shape, cv_depth.shape) )
+            return None
+        
+        rgbd_image  = np.dstack( (cv_rgb, cv_depth[:,:,0]) )
+        return rgbd_image
+    
     def callback_rgb( self, msg ):
-        pass
+        self.msg_rgb = msg
     
     def callback_depth( self, msg ):
-        pass
+        self.msg_depth = msg
     
     def callback_cam_info( self, msg ):
-        pass
+        self.msg_cam_info = msg
     
     def spin( self ):
         """ ros main loop """
