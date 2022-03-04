@@ -65,6 +65,8 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/fastpick/src && cd /
 RUN apt-get install -y mosquitto-clients mosquitto
 
 COPY . /opt/fastpick/src/drydock_ros    
+RUN DEBIAN_FRONTEND=noninteractive apt update --no-install-recommends
+
 # hack required to use Python2 here, change PATH to put /usr/bin first again...
 RUN source /opt/ros/${ROS_DISTRO}/setup.sh && cd /opt/fastpick/src && rosdep install -y -i --from-paths . && cd .. && PATH=/usr/bin:$PATH catkin_make install
 
