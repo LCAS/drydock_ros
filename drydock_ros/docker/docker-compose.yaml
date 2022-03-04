@@ -16,4 +16,12 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]    
-
+  mqtt_client:
+    build:
+      context: ../..
+      dockerfile: drydock_ros/docker/Dockerfile.test
+    restart: on-failure
+    image: lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_client:melodic
+    ipc: host
+    depends_on:
+      - "semantic_segmentation"
