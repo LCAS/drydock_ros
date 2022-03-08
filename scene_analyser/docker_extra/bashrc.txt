@@ -1,0 +1,16 @@
+
+# ros workspace is '/opt/fastpick'
+source /opt/fastpick/devel/setup.bash
+
+echo "======-======-======-======"
+echo "ROS version: `rosversion -d`"
+echo "ROS_MASTER_URI=${ROS_MASTER_URI}"
+echo "ROS_HOSTNAME=${ROS_HOSTNAME}"
+echo "ROS_IP=${ROS_IP}"
+echo "ROS_PACKAGE_PATH:"
+IFS=':' read -r -a array <<< "${ROS_PACKAGE_PATH}"
+for element in "${array[@]}"
+do
+    echo "  ${element}"
+done
+echo "======-======-======-======"
