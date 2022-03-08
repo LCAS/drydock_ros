@@ -3,9 +3,7 @@
 from __future__ import print_function
 
 
-import logging
 import numpy as np
-import cv2
 import cv_bridge
 import rospy
 
@@ -37,7 +35,6 @@ class SceneAnalyserNode( object ):
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
-        #self.model_file  = './model/fp_ss_model.pth'
         self.model_file  = 'root/scene_analyser/model/fp_ss_model.pth'
         self.config_file = 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml'
         self.mask_predictor = None

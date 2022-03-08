@@ -81,14 +81,14 @@ RUN  /opt/ros/melodic/env.sh  catkin_make
 # add the scene analyser code
 # ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 
-#RUN  mkdir -p /root/scene_analyser
+RUN  mkdir -p /root/scene_analyser
 WORKDIR /root/scene_analyser
-RUN  git clone git@github.com:usmanzahidi/MaskPredictor.git .
+#RUN  git clone git@github.com:usmanzahidi/MaskPredictor.git .
 COPY  scene_analyser/docker_extra/setup.py /root/scene_analyser/
-RUN  python setup.py develop
+#RUN  python setup.py develop
 
-RUN  apt-get install ros-melodic-cv-bridge
-RUN  pip install rospkg
+RUN  apt-get install -y ros-melodic-cv-bridge
+RUN  pip install rospkg opencv-python
 
 # ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 # switch to final directory and start a terminal
