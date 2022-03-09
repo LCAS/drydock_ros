@@ -14,11 +14,7 @@ import rospy
 
 from sensor_msgs.msg import CameraInfo, Image
 
-
-
-from masks_predictor import MasksPredictor, ClassNames
-
-
+from MaskPredictor.masks_predictor import MasksPredictor, ClassNames
 
 
 class SceneAnalyserNode( object ):

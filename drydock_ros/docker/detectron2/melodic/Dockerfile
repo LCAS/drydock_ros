@@ -51,28 +51,46 @@ RUN python3 -m venv detectron2_venv --clear --system-site-packages && \
     # pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install --no-cache-dir 'git+https://github.com/facebookresearch/fvcore' && \
     # Clone detectron2
-    git clone https://github.com/facebookresearch/detectron2 && \
+    git clone --depth 1 -b v0.6 --single-branch https://github.com/facebookresearch/detectron2 && \
     # Install detectron2
-    python -m pip install detectron2==0.5 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.8/index.html && \
+    python -m pip install -e detectron2 && \
+    #python -m pip install detectron2==0.6 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.8/index.html && \
+    #python -m pip install detectron2==0.6 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html && \
     pip install --no-cache-dir rospkg
 
 RUN rosdep update
 
-### MQTT
-RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/fastpick/src && cd /opt/fastpick/src && catkin_init_workspace . \
-    && git clone https://github.com/LCAS/mqtt_bridge.git 
 
-RUN apt-get install -y mosquitto-clients mosquitto
+# install mosquitto and tmux
+RUN apt-get install -y mosquitto-clients mosquitto tmux
 
-COPY . /opt/fastpick/src/drydock_ros    
+# setup conda packages for ROS
+RUN pip3 install tmule rospkg && conda install -c conda-forge ros-catkin setuptools
+RUN PATH=/usr/bin:$PATH pip install -r https://raw.githubusercontent.com/LCAS/mqtt_bridge/melodic-devel/requirements.txt 
+RUN conda init bash
+
+# install python2 workspace
+RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/py2_ws/src && cd /opt/py2_ws/src && catkin_init_workspace \ 
+        && git clone --depth 1 -b melodic-devel https://github.com/LCAS/mqtt_bridge.git \
+        && rosdep install -y -i --from-paths . \
+        && PATH=/usr/bin:$PATH pip install -r mqtt_bridge/requirements.txt \
+        && cd .. \
+        && ROS_PYTHON_VERSION=2 PATH=/usr/bin:$PATH catkin_make install
+
+RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/py3_ws/src && cd /opt/py3_ws/src && catkin_init_workspace 
+
+COPY . /opt/py3_ws/src/drydock_ros    
 RUN DEBIAN_FRONTEND=noninteractive apt update --no-install-recommends
 
-# hack required to use Python2 here, change PATH to put /usr/bin first again...
-RUN source /opt/ros/${ROS_DISTRO}/setup.sh && cd /opt/fastpick/src && rosdep install -y -i --from-paths . && cd .. && PATH=/usr/bin:$PATH catkin_make install
+RUN source /opt/ros/${ROS_DISTRO}/setup.sh \
+    && cd /opt/py3_ws && rosdep install -y -i --from-paths src \
+    && ROS_PYTHON_VERSION=3 catkin_make install -DSETUPTOOLS_DEB_LAYOUT=OFF
+    #&& ROS_PYTHON_VERSION=2 PATH=/usr/bin:$PATH catkin_make install --pkg mqtt_bridge  
+RUN echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc; echo "source /opt/py3_ws/install/setup.bash" >> ~/.bashrc
 
 # Docker clean-up
 RUN rm -rf /var/lib/apt/lists/*
 
-CMD ["/bin/bash", "-c", "PATH=/usr/bin:$PATH; source /opt/fastpick/install/setup.bash; roslaunch drydock_ros fastpick-server.launch"]
+CMD ["/bin/bash", "-c", "((source /detectron2_venv/bin/activate; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
 
 # build this e.g. from the top level opf repo as 
