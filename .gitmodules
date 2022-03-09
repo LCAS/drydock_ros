@@ -1,0 +1,3 @@
+[submodule "scene_analyser/MaskPredictor"]
+	path = scene_analyser/MaskPredictor
+	url = https://github.com/usmanzahidi/MaskPredictor.git

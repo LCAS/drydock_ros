@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
     - name: What
       run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
     - name: Docker Login LCAS
