@@ -181,7 +181,7 @@ catkin_install_python(PROGRAMS
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-install(DIRECTORY launch
+install(DIRECTORY launch src/MaskPredictor/data
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
