@@ -23,5 +23,7 @@ services:
     restart: on-failure
     image: lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_client:melodic
     ipc: host
+    volumes:
+      - ./:/host
     depends_on:
       - "semantic_segmentation"
