@@ -91,6 +91,6 @@ RUN echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc; echo "source /opt/py
 # Docker clean-up
 RUN rm -rf /var/lib/apt/lists/*
 
-CMD ["/bin/bash", "-c", "((source /detectron2_venv/bin/activate; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
+CMD ["/bin/bash", "-c", "((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; export PATH=/usr/bin:$PATH; source /opt/ros/melodic/setup.bash; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
 
 # build this e.g. from the top level opf repo as 
