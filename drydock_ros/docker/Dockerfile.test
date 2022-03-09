@@ -11,5 +11,6 @@ COPY . /drydock_ros/src
 RUN rosdep update; rosdep install --from-paths /drydock_ros/src -y -i 
 RUN . /opt/ros/melodic/setup.sh; catkin build
 
+CMD ["/bin/bash"]
 
 
