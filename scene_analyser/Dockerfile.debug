@@ -1,0 +1,46 @@
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## ROS SCENE ANALYSER debug file
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+##
+## to build the docker image use (from parent directory):
+##   docker build  -f scene_analyser/Dockerfile  -t ros_scene_analyser_debug  .
+##
+## to run the docker image use (adjust paths as necessary):
+##   basic command:
+##     docker run  -it  ros_scene_analyser_debug
+##
+
+FROM  melodic_detectron2:local
+
+
+
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## update apt-get repositories, upgrade
+## existing software & install
+## additional software / libs / tools
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+
+RUN  apt-get update  &&  apt-get -y upgrade  &&  apt-get install -y  nano  curl  net-tools  lsb-release  git  wget  less  build-essential  libtool  &&   rm -rf /var/lib/apt/lists/*
+
+
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## install cv_bridge for python3
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+
+RUN  mkdir -p /opt/cvbridge_build_ws/src
+WORKDIR  /opt/cvbridge_build_ws/src
+RUN  git clone -b noetic https://github.com/ros-perception/vision_opencv.git
+RUN  sed -i 's/python37/python3/g' vision_opencv/cv_bridge/CMakeLists.txt
+WORKDIR  /opt/cvbridge_build_ws
+RUN  sed -i 's/--install-layout=deb/ /g'  /opt/ros/melodic/share/catkin/cmake/python.cmake
+RUN  echo "++++++++ python version ++++++++"
+RUN  python --version
+RUN  /opt/ros/melodic/env.sh  catkin config -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
+         -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.6m \
+         -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.6m.so
+RUN  /opt/ros/melodic/env.sh  catkin config --install
+RUN  /opt/ros/melodic/env.sh  catkin build cv_bridge
+
+
+CMD  /bin/bash
+#CMD  ["/bin/bash", "-c", "((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3)&)"]

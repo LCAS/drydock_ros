@@ -1,6 +1,15 @@
+source /detectron2_venv/bin/activate
+source /opt/ros/melodic/setup.bash
+source /opt/py3_ws/install/setup.bash
+source /opt/cvbridge_build_ws/install/setup.bash --extend
 
-# ros workspace is '/opt/fastpick'
+# ros workspace is '/opt/py3_ws'
 source /opt/py3_ws/devel/setup.bash
+
+ROS_PYTHON_VERSION=3
+
+
+
 
 echo "======-======-======-======"
 echo "ROS version: `rosversion -d`"

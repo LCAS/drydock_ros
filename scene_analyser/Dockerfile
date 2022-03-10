@@ -52,23 +52,26 @@ ENV  DISPLAY :0
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## install cv_bridge for python3
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-RUN  apt-get install -y python3-numpy
+#RUN  apt-get install -y python3-numpy
 RUN  mkdir -p /opt/cvbridge_build_ws/src
 WORKDIR  /opt/cvbridge_build_ws/src
 RUN  git clone -b noetic https://github.com/ros-perception/vision_opencv.git
 RUN  sed -i 's/python37/python3/g' vision_opencv/cv_bridge/CMakeLists.txt
 WORKDIR  /opt/cvbridge_build_ws
 RUN  sed -i 's/--install-layout=deb/ /g'  /opt/ros/melodic/share/catkin/cmake/python.cmake
-RUN  /opt/ros/melodic/env.sh  catkin config -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.6m -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.6m.so
+RUN  echo "++++++++ python version ++++++++"
+RUN  python --version
+RUN  /opt/ros/melodic/env.sh  catkin config -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
+         -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.6m \
+         -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.6m.so
 RUN  /opt/ros/melodic/env.sh  catkin config --install
 RUN  /opt/ros/melodic/env.sh  catkin build cv_bridge
-RUN  echo "source /opt/cvbridge_build_ws/install/setup.bash --extend" >> /root/.bashrc
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## ROS scene_analyser code
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-## Note: we have a ros workspace at /opt/fastpick from our parent image
+## Note: we have a ros workspace at /opt/py3_ws from our parent image
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 WORKDIR  /opt/py3_ws
 COPY  scene_analyser  /opt/py3_ws/src/scene_analyser
@@ -76,6 +79,7 @@ COPY  scene_analyser  /opt/py3_ws/src/scene_analyser
 RUN  cat src/scene_analyser/docker_extra/bashrc.txt >> /root/.bashrc
 #RUN  /opt/ros/melodic/env.sh  rosdep install -y -i --from-paths .
 #RUN  /opt/ros/melodic/env.sh  catkin_make
+#RUN  echo "source /opt/cvbridge_build_ws/install/setup.bash --extend" >> /root/.bashrc
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
@@ -94,4 +98,9 @@ RUN  /opt/ros/melodic/env.sh  catkin_make
 WORKDIR  /opt/py3_ws
 RUN  /opt/py3_ws/devel/env.sh pip3 install pyyaml rospkg
 
+
+
 CMD /bin/bash
+#CMD ["/bin/bash", "-c", "((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; export PATH=/usr/bin:$PATH; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
+
+
