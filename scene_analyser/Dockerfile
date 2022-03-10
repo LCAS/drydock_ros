@@ -15,10 +15,10 @@
 ##
 ## to run the docker image use (adjust paths as necessary):
 ##   basic command:
-##     docker run  -it  --gpus all  --entrypoint  --net=host  -e DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  ros_scene_analyser
+##     docker run  -it  --gpus all  --entrypoint /bin/bash  --net=host  -e DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  ros_scene_analyser
 ##
 ##   optional mount volumes, e.g.:
-##     docker run  -it  --gpus all  --entrypoint  --net=host  -e DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  -v /path/to/local/repo/MaskPredictor/:/root/scene_analyser/  ros_scene_analyser
+##     docker run  -it  --gpus all  --entrypoint /bin/bash  --net=host  -e DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  -v /path/to/local/repo/MaskPredictor/:/root/scene_analyser/  ros_scene_analyser
 ##     docker run  -it  --gpus all  --entrypoint /bin/bash  -v /opt/shared/uol/developer/github.lcas/drydock_ros/scene_analyser/:/opt/fastpick/src/scene_analyser  -v /opt/shared/uol/developer/model/:/root/scene_analyser/model  --net=host  -e DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  ros_scene_analyser
 ##
 ## if you encounter the error
@@ -38,8 +38,6 @@ FROM  melodic_detectron2:local
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 RUN  apt-get update  &&  apt-get -y upgrade
 RUN  apt-get install -y  nano  curl  python3-pip  net-tools  lsb-release  git  wget  less  build-essential  libtool  tmux  openssh-client
-# because python (2.7) is not installed we set an alias here for convenience
-#RUN  ln -s /usr/bin/python3 /usr/bin/python
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
@@ -64,8 +62,7 @@ RUN  sed -i 's/--install-layout=deb/ /g'  /opt/ros/melodic/share/catkin/cmake/py
 RUN  /opt/ros/melodic/env.sh  catkin config -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.6m -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.6m.so
 RUN  /opt/ros/melodic/env.sh  catkin config --install
 RUN  /opt/ros/melodic/env.sh  catkin build cv_bridge
-#RUN  echo "\nsource install/setup.bash --extend\n" >> /root/.bashrc
-
+RUN  echo "source /opt/cvbridge_build_ws/install/setup.bash --extend" >> /root/.bashrc
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
@@ -73,10 +70,10 @@ RUN  /opt/ros/melodic/env.sh  catkin build cv_bridge
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## Note: we have a ros workspace at /opt/fastpick from our parent image
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-WORKDIR  /opt/fastpick
-COPY  scene_analyser  /opt/fastpick/src/scene_analyser
+WORKDIR  /opt/py3_ws
+COPY  scene_analyser  /opt/py3_ws/src/scene_analyser
 # modify .bashrc to work with our workspace and also adds ros info to terminal
-#RUN  cat src/scene_analyser/docker_extra/bashrc.txt >> /root/.bashrc
+RUN  cat src/scene_analyser/docker_extra/bashrc.txt >> /root/.bashrc
 #RUN  /opt/ros/melodic/env.sh  rosdep install -y -i --from-paths .
 #RUN  /opt/ros/melodic/env.sh  catkin_make
 
@@ -84,20 +81,17 @@ COPY  scene_analyser  /opt/fastpick/src/scene_analyser
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## add the scene analyser code
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-WORKDIR  /opt/fastpick/src/scene_analyser
-COPY  scene_analyser/docker_extra/setup.py /opt/fastpick/src/scene_analyser/
-#RUN  python setup.py develop
-#RUN  echo "python setup.py install" | bash
-
+WORKDIR  /opt/py3_ws/src/scene_analyser
 #RUN  apt-get install -y ros-melodic-cv-bridge
-RUN  pip install rospkg opencv-python
+#RUN  pip3 install rospkg opencv-python
 
-WORKDIR  /opt/fastpick
+WORKDIR  /opt/py3_ws
 RUN  /opt/ros/melodic/env.sh  catkin_make
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## switch to final directory and start a terminal
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-WORKDIR  /opt/fastpick
+WORKDIR  /opt/py3_ws
+RUN  /opt/py3_ws/devel/env.sh pip3 install pyyaml rospkg
 
 CMD /bin/bash

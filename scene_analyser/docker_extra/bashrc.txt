@@ -1,6 +1,6 @@
 
 # ros workspace is '/opt/fastpick'
-source /opt/fastpick/devel/setup.bash
+source /opt/py3_ws/devel/setup.bash
 
 echo "======-======-======-======"
 echo "ROS version: `rosversion -d`"
@@ -13,4 +13,5 @@ for element in "${array[@]}"
 do
     echo "  ${element}"
 done
+python --version
 echo "======-======-======-======"
