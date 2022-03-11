@@ -43,4 +43,32 @@ RUN  cat src/drydock_ros/drydock_ros/scene_analyser/docker_extra/bashrc.txt >> /
 
 
 
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## cv_bridge custom build with python3
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+
+# 1) clone to custon workspace
+RUN  mkdir -p /opt/cv_bridge_ws/src
+WORKDIR  /opt/cv_bridge_ws/src
+RUN  git clone https://github.com/ros-perception/vision_opencv
+
+# 2) modify to work with python 3.6
+RUN  sed -i 's/python37/python3/g' ./vision_opencv/cv_bridge/CMakeLists.txt
+
+# 3) build via catkin_build
+WORKDIR  /opt/cv_bridge_ws
+COPY  drydock_ros/scene_analyser/docker_extra/cv_bridge.build.sh /opt/cv_bridge_ws/cv_bridge.build.sh
+#RUN  catkin config -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.6m -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.6m.so  -DSETUPTOOLS_DEB_LAYOUT=OFF
+RUN  chmod +x ./cv_bridge.build.sh  &&  ./cv_bridge.build.sh
+
+# 4) add to .bashrc to enable our new cv_bridge module in future calls
+RUN  echo "source /opt/cv_bridge_ws/install/setup.bash  --extend" >> ~/.bashrc
+
+
+
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## CMD
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+
+
 CMD /bin/bash
