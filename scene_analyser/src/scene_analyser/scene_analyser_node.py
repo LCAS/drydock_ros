@@ -77,7 +77,7 @@ class SceneAnalyserNode( object ):
         print( 'advertising topics:' )
         for topic in self.output_topics:
             print( '  - "{}"'.format(self.topic_prefix+topic) )
-            self.publisher[topic] = rospy.Publisher( self.topic_prefix + topic, Image )
+            self.publisher[topic] = rospy.Publisher( self.topic_prefix + topic, Image, queue_size=1 )
     
     def publish( self, messages ):
         """ publishes all messages to the respective topics. expects the messages to be in the same order as self.output_topics """
