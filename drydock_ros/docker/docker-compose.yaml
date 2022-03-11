@@ -22,7 +22,11 @@ services:
       dockerfile: drydock_ros/docker/Dockerfile.test
     restart: on-failure
     image: lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_client:melodic
-    ipc: host
+    ports:
+      - 10002:6080
+    environment:
+      - "MQTT_BRIDGE_IP=semantic_segmentation"
+      - "MQTT_BRIDGE_PORT=5232"
     volumes:
       - ./:/host
     depends_on:
