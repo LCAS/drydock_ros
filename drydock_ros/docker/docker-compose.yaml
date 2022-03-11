@@ -10,6 +10,7 @@ services:
     image: lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_server:melodic
     ipc: host
     ports:
+      - 10000:6080
       - 10001:5232
     deploy:
       resources:
