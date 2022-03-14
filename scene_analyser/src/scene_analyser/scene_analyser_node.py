@@ -24,15 +24,16 @@ class SceneAnalyserNode( object ):
         rospy.init_node( 'scene_analyser', anonymous=False )
         print( 'SceneAnalyserNode.__init__' )
         self.topic_prefix = rospy.get_param( '~topic_prefix', '/semantic/' ) # this prefix helps to avoid topic name collisions
-        self.topic_rgb = rospy.get_param( '~rgb', 'todo_default' )
-        self.topic_depth = rospy.get_param( '~depth', 'todo_default' )
-        self.topic_cam_info = rospy.get_param( '~camera_info', 'todo_default' )
+        self.topic_rgb = rospy.get_param( '~rgb', '/rbg' )
+        self.topic_depth = rospy.get_param( '~depth', '/depth' )
+        self.topic_cam_info = rospy.get_param( '~camera_info', '/cam_info' )
         self.bridge = cv_bridge.CvBridge()
+        # @todo: make topic storage a queue to be thread save
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
-        self.model_file  = 'root/scene_analyser/model/fp_ss_model.pth'
-        self.config_file = 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml'
+        self.model_file  = rospy.get_param( '~model_file', 'root/scene_analyser/model/fp_ss_model.pth' )
+        self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' )
         self.mask_predictor = None
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
         try:
@@ -88,14 +89,17 @@ class SceneAnalyserNode( object ):
         """ starts the prediction process by converting the ROS messages to OpenCV images and passing the data to the predictor """
         if not self.msg_rgb or not self.msg_depth:
             return
+        # @todo: prevent possible race condition here, or at least reduce risk
         rgbd_image = self.read_message_data()
-        if not rgbd_image:
-            return
-        depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list )
-        messages = [self.bridge.cv_to_imgmsg(mask, "mono8") for mask in depth_masks ]
-        self.publish( messages )
         self.msg_rgb = None
         self.msg_depth = None
+        if not rgbd_image:
+            return
+        print( 'running mask predictor' )
+        depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list )
+        print( 'masks computed, publishing results' )
+        messages = [self.bridge.cv_to_imgmsg(mask, "mono8") for mask in depth_masks ]
+        self.publish( messages )
     
     def read_message_data( self ):
         """ reads the stored ROS image messages. The messages are converted into OpenCV images and merged into an rgbd image which is then returned.
@@ -124,9 +128,11 @@ class SceneAnalyserNode( object ):
     
     def callback_rgb( self, msg ):
         self.msg_rgb = msg
+        self.run()
     
     def callback_depth( self, msg ):
         self.msg_depth = msg
+        self.run()
     
     def callback_cam_info( self, msg ):
         self.msg_cam_info = msg

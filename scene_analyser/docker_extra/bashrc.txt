@@ -8,7 +8,7 @@ source /opt/py3_ws/devel/setup.bash
 
 ROS_PYTHON_VERSION=3
 
-
+export PYTHONPATH=/opt/cv_bridge_ws/install/lib/python3.6/site-packages:/opt/py3_ws/devel/lib/python3.6/site-packages:/opt/ros/melodic/lib/python2.7/dist-packages
 
 
 echo "======-======-======-======"
