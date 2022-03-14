@@ -79,6 +79,12 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/py2_ws/src && cd /op
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/py3_ws/src && cd /opt/py3_ws/src && catkin_init_workspace 
 
+# install virtual desktop
+RUN apt-get install -y xfce4-session xfce4-terminal xfce4-panel tigervnc-standalone-server net-tools
+RUN mkdir -p /usr/local/lib && git -C /usr/local/lib clone --recursive https://github.com/marc-hanheide/remote_manager.git 
+RUN mkdir -p /usr/local/bin && install /usr/local/lib/remote_manager/network-scripts/bin/ngrok1.lnx /usr/local/bin/ngrok1
+
+
 COPY . /opt/py3_ws/src/drydock_ros    
 RUN DEBIAN_FRONTEND=noninteractive apt update --no-install-recommends
 
@@ -91,6 +97,6 @@ RUN echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc; echo "source /opt/py
 # Docker clean-up
 RUN rm -rf /var/lib/apt/lists/*
 
-CMD ["/bin/bash", "-c", "((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; export PATH=/usr/bin:$PATH; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
+CMD ["/bin/bash", "-c", "(/usr/local/lib/remote_manager/vnc_runner/noVNC/utils/launch.sh --vnc localhost:5901 --listen 6080 &); rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; (vncserver -localhost yes -depth 24 -geometry 1280x720 -SecurityTypes None -fg :1 &);    ((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; export PATH=/usr/bin:$PATH; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
 
 # build this e.g. from the top level opf repo as 

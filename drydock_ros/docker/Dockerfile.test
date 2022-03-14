@@ -1,16 +1,18 @@
-FROM lcas.lincoln.ac.uk/lcas/base:bionic
+FROM lcas.lincoln.ac.uk/lcas/novnc-desktop-standalone:bionic
 MAINTAINER Marc Hanheide "marc@hanheide.net"
 
-RUN apt-get -y update
-RUN apt-get -y install ros-melodic-mqtt-bridge python-catkin-tools 
+RUN sudo apt-get -y update && sudo apt-get -y dist-upgrade
+RUN sudo apt-get -y install ros-melodic-mqtt-bridge python-catkin-tools 
 
-RUN mkdir -p /drydock_ros/src
-WORKDIR /drydock_ros
-COPY . /drydock_ros/src
+RUN mkdir -p /home/lcas/drydock_ros/src
+WORKDIR /home/lcas/drydock_ros
+COPY . /home/lcas/drydock_ros/src
 
-RUN rosdep update; rosdep install --from-paths /drydock_ros/src -y -i 
+RUN rosdep update; rosdep install --from-paths /home/lcas/drydock_ros/src -y -i 
 RUN . /opt/ros/melodic/setup.sh; catkin build
+RUN pip install -r https://raw.githubusercontent.com/LCAS/mqtt_bridge/melodic-devel/requirements.txt
+RUN echo "source /home/lcas/drydock_ros/devel/setup.bash" >> /home/lcas/.bashrc
 
-CMD ["/bin/bash"]
+#CMD ["/bin/bash"]
 
 
