@@ -65,6 +65,12 @@ RUN  chmod +x ./cv_bridge.build.sh  &&  ./cv_bridge.build.sh
 RUN  echo "source /opt/cv_bridge_ws/install/setup.bash  --extend" >> ~/.bashrc
 
 
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## last minute hacks
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+RUN chmod +x /opt/py3_ws/src/drydock_ros/scene_analyser/scripts/*.py
+
+
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## CMD
