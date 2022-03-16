@@ -24,6 +24,7 @@ class SceneAnalyserNode( object ):
         rospy.init_node( 'scene_analyser', anonymous=False )
         print( 'SceneAnalyserNode.__init__' )
         self.topic_prefix = rospy.get_param( '~topic_prefix', '/semantic/' ) # this prefix helps to avoid topic name collisions
+        self.cam_info_suffix = '/cam_info'
         self.topic_rgb = rospy.get_param( '~rgb', '/rbg' )
         self.topic_depth = rospy.get_param( '~depth', '/depth' )
         self.topic_cam_info = rospy.get_param( '~camera_info', '/cam_info' )
@@ -32,7 +33,7 @@ class SceneAnalyserNode( object ):
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
-        self.model_file  = rospy.get_param( '~model_file', 'root/scene_analyser/model/fp_ss_model.pth' )
+        self.model_file  = rospy.get_param( '~model_file', '/root/scene_analyser/model/fp_ss_model.pth' )
         self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' )
         self.mask_predictor = None
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
@@ -47,7 +48,8 @@ class SceneAnalyserNode( object ):
             'rigid',
             'background')
         
-        self.publisher = dict() # dictionary of publishers, topic acts as key
+        self.publisher_rgbd = dict() # dictionary of publishers, topic acts as key
+        self.publisher_cam_info = dict() # dictionary of publishers, image topic acts as key (not CameraInfo topic!)
         print( 'setting up subscriber' )
         self.subscribe()
         print( 'setting up publisher' )
@@ -78,28 +80,32 @@ class SceneAnalyserNode( object ):
         print( 'advertising topics:' )
         for topic in self.output_topics:
             print( '  - "{}"'.format(self.topic_prefix+topic) )
-            self.publisher[topic] = rospy.Publisher( self.topic_prefix + topic, Image, queue_size=1 )
+            self.publisher_rgbd[topic] = rospy.Publisher( self.topic_prefix + topic, Image, queue_size=1 )
+        self.publisher_cam_info[topic] = rospy.Publisher( self.topic_prefix + topic + self.cam_info_suffix, CameraInfo, queue_size=1 )
     
-    def publish( self, messages ):
+    def publish( self, messages, cam_info ):
         """ publishes all messages to the respective topics. expects the messages to be in the same order as self.output_topics """
         for i in range(len(messages)):
-            self.publisher[self.output_topics[i]].publish( messages[i] )
+            self.publisher_rgbd[self.output_topics[i]].publish( messages[i] )
+            self.publisher_cam_info[self.output_topics[i]].publish( cam_info )
     
     def run( self ):
         """ starts the prediction process by converting the ROS messages to OpenCV images and passing the data to the predictor """
-        if not self.msg_rgb or not self.msg_depth:
+        if not self.msg_rgb or not self.msg_depth or not self.msg_cam_info:
             return
         # @todo: prevent possible race condition here, or at least reduce risk
         rgbd_image = self.read_message_data()
+        cam_info = self.msg_cam_info
         self.msg_rgb = None
         self.msg_depth = None
+        self.msg_cam_info = None
         if not rgbd_image:
             return
         print( 'running mask predictor' )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list )
         print( 'masks computed, publishing results' )
         messages = [self.bridge.cv_to_imgmsg(mask, "mono8") for mask in depth_masks ]
-        self.publish( messages )
+        self.publish( messages, cam_info )
     
     def read_message_data( self ):
         """ reads the stored ROS image messages. The messages are converted into OpenCV images and merged into an rgbd image which is then returned.

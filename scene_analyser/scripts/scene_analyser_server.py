@@ -18,7 +18,6 @@ from scene_analyser.scene_analyser_server import SceneAnalyserActionServer
 if __name__ == '__main__':
 
     print( 'starting scene analyser node' )
-    print( 'foobar' )
     node = Node()
     #act_server = SceneAnalyserActionServer()
     node.spin()

@@ -30,6 +30,7 @@ RUN  apt-get update  &&  apt-get -y upgrade  &&  apt-get install -y  nano  curl 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 RUN  apt-get install -y x11-common
 RUN  useradd -ms /bin/bash user
+# default value for display. works for most environments, but not all
 ENV  DISPLAY :0
 #USER  user
 
