@@ -9,7 +9,7 @@
 ##   basic command:
 ##     docker run  -it  ros_scene_analyser
 ##
-##     docker run  -it  --gpus all  --entrypoint /bin/bash  -v /opt/shared/uol/developer/github.lcas/drydock_ros/scene_analyser/:/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser  -v /opt/shared/uol/developer/model/:/root/scene_analyser/model  --net=host  -e DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  ros_scene_analyser
+##     docker run  -it  --gpus all  --entrypoint /bin/bash  -v /tmp/.X11-unix:/tmp/.X11-unix  -v /opt/shared/uol/developer/github.lcas/drydock_ros/scene_analyser/:/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser  -v /opt/shared/uol/developer/model/:/root/scene_analyser/model  --net=host  -e DISPLAY=$DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  ros_scene_analyser
 
 FROM  melodic_detectron2:local
 
@@ -63,6 +63,14 @@ RUN  chmod +x ./cv_bridge.build.sh  &&  ./cv_bridge.build.sh
 
 # 4) add to .bashrc to enable our new cv_bridge module in future calls
 RUN  echo "source /opt/cv_bridge_ws/install/setup.bash  --extend" >> ~/.bashrc
+
+
+
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## adding the pytorch model
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+RUN  mkdir -p /root/scene_analyser/model  &&  wget https://files.lar.lincoln.ac.uk/s/iKGCwFz8PaNn4GX/download/fp_ss_model.pth /root/scene_analyser/model/
+
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
