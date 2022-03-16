@@ -1,38 +1,37 @@
 #!/usr/bin/env python
-from cmath import rect
-from math import inf
-# from black import out
-from matplotlib import units
-import numpy as np
-from numpy.core.shape_base import block
-import matplotlib.pyplot as plt
-# from sensor_msgs.msg import Image, CameraInfo
-#######################################################
-#######################################################
-from datetime import datetime
-import pyrealsense2 as rs
-from scipy.spatial.transform import *
-import sys
-########################################################
-from tools_dl.rsDetect_TrackSeg_full import StawbDetTracker
-# from tools.rs_insertPointCloudepth_octo import rs_callback_xyz_octo
-from MaskPredictor.usman_dl import call_predictor
 
-import os, time,math
-import cv2, json
+
+import os
+import math
+import json
 from collections import OrderedDict
-######################################
 
 import glooey
-from glooey.containers import VBox
 import pyglet
-from pyglet import shapes
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import pyrealsense2 as rs
+from scipy.spatial.transform import *
 import trimesh
 import trimesh.transformations as tf
 import trimesh.viewer
 import octomap
-######################################
 from itertools import count
+
+
+from tools_dl.rsDetect_TrackSeg_full import StawbDetTracker
+from MaskPredictor.usman_dl import call_predictor
+
+# from sensor_msgs.msg import Image, CameraInfo
+#######################################################
+#######################################################
+########################################################
+# from tools.rs_insertPointCloudepth_octo import rs_callback_xyz_octo
+
+######################################
+
+######################################
 
 # https://scipy-lectures.org/intro/scipy/auto_examples/plot_connect_measurements.html
 def pointcloud_from_depth(depth, fx, fy, cx, cy):
@@ -99,7 +98,7 @@ class MapManager(object):
         self.depth_masks = None   #  place holder for usman's output of segmentation
 
         self.num = -1
-        self.num_images = inf
+        self.num_images = math.inf
         self.figsave_path = 'results/'
         # self.depth_image_oct   = 0.0
         self.messages_img=None
@@ -388,7 +387,7 @@ class MapManager(object):
             #################################################################################
             # Detect object maxctroid: the largest contour
             distance, depth_point = self.Pos2DPixels3Dxyz(depth_frame,cx,cy,depth_intrin)
-            text = "xyz: %.5lf, %.5lf, %.5lfm" % (depth_point[0], depth_point[1], depth_point[2])
+            # text = "xyz: %.5lf, %.5lf, %.5lfm" % (depth_point[0], depth_point[1], depth_point[2])
             # cv2.putText(color_frame, "Measured xyz{}m".format(distance), (depth_point[0], depth_point[1] - 20), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 0), 2)
             # cv2.putText(frame, text, (int(depth_point[0]), int(depth_point[1]) - 20), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 0), 2)
             # cv2.putText(frame,text, (cx + recxy, cy - recxy), 0, 0.5, (0,200,255), 2)
@@ -399,13 +398,13 @@ class MapManager(object):
             # cv2.circle(depth_image, (cx,cy), 8, (0, 0, 255), 1)
             # creating alabel
             scale_w =2#0.5# two crossed? 2 # second
-            label = pyglet.text.Label('strawb',
-                                    font_name ='Times New Roman',
-                                    color=(255,0, 0, 255),
-                                    font_size = 36,
-                                    x = scale_w*cx,#scale_w*window.width//2, 
-                                    y = scale_w*cy,#window.height//2,
-                                    anchor_x ='center', anchor_y ='center')
+            #label = pyglet.text.Label('strawb',
+            #                        font_name ='Times New Roman',
+            #                        color=(255,0, 0, 255),
+            #                        font_size = 36,
+            #                        x = scale_w*cx,#scale_w*window.width//2, 
+            #                        y = scale_w*cy,#window.height//2,
+            #                        anchor_x ='center', anchor_y ='center')
 
             """        
             ##############################################################
@@ -746,7 +745,7 @@ class MapManager(object):
         """   
 
 
-        recxy = 10     
+        #recxy = 10     
         h, w, ch = self.color_image.shape
         dim = (w,h)
         self.inst_image = cv2.resize(self.inst_image,dim, interpolation=cv2.INTER_LINEAR) 

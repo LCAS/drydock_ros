@@ -1,36 +1,31 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from itertools import count
-# from pickle import TRUE
+
 print(__doc__)
-import sys
-from datetime import datetime
-import numpy as np
+
+# python modules
 import os
-from numpy.core.shape_base import block
+import sys
+import time
 
-from collections import OrderedDict
 
+# third party modules
+import cv2
+import numpy as np
 import torch
-import torch.nn as nn
-import torch.utils.data as data
-# import torchvision
-import torchvision.transforms as transforms
-# from PIL import Image
-# import transforms as ext_transforms
-from models.enet import ENet
-# import utils
+import matplotlib
 import matplotlib.pyplot as plt
-import cv2, time
-from tools_dl.rs_insertPointCloudSegPtoch_usmanl_octo_3 import MapManager
-# from tools_dl.rs_insertPointCloudSegPtoch_usmanl_octo_o3d import MapManager
 import pyrealsense2 as rs
+
+
+# import our own modules
+from dom_octo_mapper.tools_dl.rs_insertPointCloudSegPtoch_usmanl_octo_3 import MapManager
+
 
 device = torch.device(0)
 
 
-import matplotlib
 matplotlib.use('TkAgg')
 print('sys version: ', sys.version)
 print('torch version: ', torch.__version__)
@@ -84,7 +79,7 @@ def main():
             # rgb_usman = color_image.astype(np.int8)
             # depth_usman = depth_image.astype(np.int8)
             img_inst = None
-            epth_usman_3ch = None
+            depth_usman_3ch = None
             rgb_usman = None
             img_inst = None
             img_inst, strawbs_dic,seg_image = mapObj.rs_callback_cvSeg_Proc(depth_usman_3ch,rgb_usman,img_inst)
@@ -105,7 +100,6 @@ def main():
                 print('depth_points = ',pt.depth_points) 
 
                 print('center cx, cy = ',center[0], center[1])                 
-                numpix = len(roi)
                 print('roi size = ',len(roi))
                 # calculate depth vector and 3D vector in another way
                 cy_vec = roi[:,0]
@@ -113,13 +107,8 @@ def main():
                 print('cy_vec = ',cy_vec) 
                 print('cx_vec = ',cx_vec)            
                 #####################
-                roi_lst = list(roi)
-                cy_lst =roi_lst[0][0] #np.argwhere(label==i)
-                cx_lst = roi_lst[0][1]
                 depth_filtered = pt.depth_obj # keep individual segmented obj depth image
                 color_filtered = pt.color_obj # hold individual segmented obj color image
-                occupied = pt.occupied
-                empty = pt.empty
                 plots = {'Ori-RGB': mapObj.color_image, 'Ori-depth': mapObj.depth_image, 'depth_obj': depth_filtered, 'color_obj': color_filtered}
                 fig, ax = plt.subplots(1, len(plots), figsize=(16,12))
                 for n, (title, im) in enumerate(plots.items()):
@@ -141,7 +130,6 @@ def main():
 
                 full_mask = np.zeros( img_ori.shape[:2] , dtype=np.uint8)
                 full_mask[full_mask==roi]=255
-                full_mask_1 = np.where(full_mask==255)
                 # seed = np.argwhere(full_mask==255)
                 indices =(np.array(full_mask)).reshape( (-1, int( len(full_mask)) ) )
                 indices = tuple(map(tuple, indices))

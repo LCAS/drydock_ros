@@ -13,7 +13,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random, math
 from collections import deque
-from datetime import datetime
 import pyrealsense2 as rs
 
 # import cv2
