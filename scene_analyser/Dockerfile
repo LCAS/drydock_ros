@@ -21,7 +21,7 @@ FROM  melodic_detectron2:local
 ## additional software / libs / tools
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 
-RUN  apt-get update  &&  apt-get -y upgrade  &&  apt-get install -y  nano  curl  net-tools  lsb-release  git  wget  less  build-essential  libtool  &&   rm -rf /var/lib/apt/lists/*
+RUN  apt-get update  &&  apt-get -y upgrade  &&  apt-get install -y  nano  curl  net-tools  lsb-release  git  wget  less  build-essential  libtool  &&  rm -rf /var/lib/apt/lists/*
 
 
 
@@ -68,6 +68,15 @@ RUN  echo "source /opt/cv_bridge_ws/install/setup.bash  --extend" >> ~/.bashrc
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+## building octomap-python
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
+#WORKDIR  /root
+#RUN  git clone --recursive https://github.com/wkentaro/octomap-python.git
+#WORKDIR  /root/octomap-python
+#RUN  python ./setup.py build  &&  python setup.py install
+
+
+## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## adding the pytorch model
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 RUN  mkdir -p /root/scene_analyser/model  &&  wget https://files.lar.lincoln.ac.uk/s/iKGCwFz8PaNn4GX/download/fp_ss_model.pth /root/scene_analyser/model/
@@ -77,8 +86,10 @@ RUN  mkdir -p /root/scene_analyser/model  &&  wget https://files.lar.lincoln.ac.
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## last minute hacks
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-RUN chmod +x /opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/scripts/*.py
-
+RUN  chmod +x /opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/scripts/*.py
+RUN  pip install octomap-python
+#RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octomap ros-melodic-dynamic-edt-3d ros-melodic-octomap-ros ros-melodic-octovis ros-melodic-octomap-msgs  &&  rm -rf /var/lib/apt/lists/*
+RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octomap-msgs  &&  rm -rf /var/lib/apt/lists/*
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~

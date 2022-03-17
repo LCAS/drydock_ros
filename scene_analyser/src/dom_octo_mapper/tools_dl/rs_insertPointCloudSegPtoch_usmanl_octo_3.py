@@ -23,15 +23,7 @@ from itertools import count
 from tools_dl.rsDetect_TrackSeg_full import StawbDetTracker
 from MaskPredictor.usman_dl import call_predictor
 
-# from sensor_msgs.msg import Image, CameraInfo
-#######################################################
-#######################################################
-########################################################
-# from tools.rs_insertPointCloudepth_octo import rs_callback_xyz_octo
 
-######################################
-
-######################################
 
 # https://scipy-lectures.org/intro/scipy/auto_examples/plot_connect_measurements.html
 def pointcloud_from_depth(depth, fx, fy, cx, cy):
@@ -49,8 +41,6 @@ def pointcloud_from_depth(depth, fx, fy, cx, cy):
 
     return pc
 
-    ##############################################
-    ##############################################
 
 
 class rastrack():
@@ -256,8 +246,20 @@ class MapManager(object):
         y = np.where(valid, z * (r - self.ppy) / self.fy, 0)
 
         return np.dstack((x, y, z))
-
     
+    def pointcloud_from_depth(self,depth, fx, fy, cx, cy):
+        assert depth.dtype.kind == 'f', 'depth must be float and have meter values'
+
+        rows, cols = depth.shape
+        c, r = np.meshgrid(np.arange(cols), np.arange(rows), sparse=True)
+        valid = ~np.isnan(depth)
+        z = np.where(valid, depth, np.nan)
+        x = np.where(valid, z * (c - cx) / fx, np.nan)
+        y = np.where(valid, z * (r - cy) / fy, np.nan)
+        pc = np.dstack((x, y, z))
+
+        return pc
+
     def get_aligned_images(self):
 
         self.frames = self.pipeline.wait_for_frames()  # Wait for image frame 
@@ -305,6 +307,7 @@ class MapManager(object):
         # Return camera internal parameters 、 Depth parameter 、 Color picture 、 Depth map 、 In homogeneous frames depth frame 
         return self.color_intrin, self.depth_intrin, self.color_image, self.depth_image, self.depth_frame
     '''  Obtain the 3D coordinates of random points  '''
+
     def get_3d_camera_coordinate(self,depth_pixel, aligned_depth_frame, depth_intrin):
         x = depth_pixel[0]
         y = depth_pixel[1]
@@ -322,6 +325,7 @@ class MapManager(object):
         #THE FOLLOWING CALL EXECUTES FINE IF YOU PLUGIN A BOGUS DEPH
         depth_point_mts_cam_coords = rs.rs2_deproject_pixel_to_point(depth_intrin, [c, r], depth)
         return depth ,depth_point_mts_cam_coords
+
     def labeled_scene_widget(self,scene, label):
         vbox = glooey.VBox()
         vbox.add(glooey.Label(text=label, color=(255, 255, 255)), size=0)
@@ -537,18 +541,6 @@ class MapManager(object):
         # plt.imshow(viewplet,cmap='gray')
         # plt.show(block=True)
 
-    def pointcloud_from_depth(self,depth, fx, fy, cx, cy):
-        assert depth.dtype.kind == 'f', 'depth must be float and have meter values'
-
-        rows, cols = depth.shape
-        c, r = np.meshgrid(np.arange(cols), np.arange(rows), sparse=True)
-        valid = ~np.isnan(depth)
-        z = np.where(valid, depth, np.nan)
-        x = np.where(valid, z * (c - cx) / fx, np.nan)
-        y = np.where(valid, z * (r - cy) / fy, np.nan)
-        pc = np.dstack((x, y, z))
-
-        return pc
     # def rs_callback_xyz_octo(self,pcd, occupied,empty, mask,resolution, aabb, centers):#self,depth_image,rgb,K,depth_intrin,depth_frame,num,output_path,centers=[],debugMode=True):       
     def rs_callback_xyz_octo(self,depth_image,rgb,K,depth_intrin,depth_frame,num,output_path,centers=[],debugMode=True):
 
@@ -1169,7 +1161,7 @@ class MapManager(object):
            
 
 
-    ##original without mathcing######################################################
+    ## original without matching #####################################################
 
      # using rosbag as input data 
     def rs_callback_cvSeg_rosbag2(self,depth_image,img_ori, img_inst,figsave_path=''):
@@ -1461,4 +1453,6 @@ class MapManager(object):
         # pcd = pointcloud_from_depth(
         #     self.depth_image, fx=self.fx, fy=self.fy, cx=self.ppx, cy=self.ppy)
 
-        return centers, depth_point     
+        return centers, depth_point   
+
+  

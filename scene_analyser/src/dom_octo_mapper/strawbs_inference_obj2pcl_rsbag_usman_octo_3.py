@@ -72,7 +72,7 @@ def main():
             img_ori = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)              
         else:          
         
-            # for attension of Jonann: this is where to access Usman output starting entrance, but inside , is the local acess to usman's codes
+            # for attention of Jonann: this is where to access Usman's output starting entrance, but inside , is the local acess to usman's codes
             # I belive you are genius on how to handle this under your structure.-  good luck ot use it , explore..,
            
             # for using Usman's interface
@@ -83,7 +83,7 @@ def main():
             rgb_usman = None
             img_inst = None
             img_inst, strawbs_dic,seg_image = mapObj.rs_callback_cvSeg_Proc(depth_usman_3ch,rgb_usman,img_inst)
-            ############optization by data fusiong, - data assocation mathcing ###########
+            ############ optimization by data fusing, - data assocation matching ###########
                         
             # output = np.zeros((img_ori.shape[0], img_ori.shape[1], 3), np.uint8) 
             output_t = np.zeros((img_ori.shape[0], img_ori.shape[1], 3), np.uint8)  
