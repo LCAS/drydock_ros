@@ -7,7 +7,7 @@
 ##   - nvidia container toolkit
 ##
 ## Build with:
-##   docker build -t melodic_detectron2:local .
+##   docker build -t melodic_detectron2:local --no-cache -f drydock_ros/drydock_ros/docker/detectron2/melodic/Dockerfile .
 ##
 ## Save with:
 ##   docker save melodic_detectron2:local | gzip > melodic_detectron2.tar.gz

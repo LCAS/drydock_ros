@@ -2,6 +2,8 @@
 
 from __future__ import print_function
 
+import time
+import threading
 
 import numpy as np
 import cv_bridge
@@ -28,15 +30,39 @@ class SceneAnalyserNode( object ):
         self.topic_rgb = rospy.get_param( '~rgb', '/rbg' )
         self.topic_depth = rospy.get_param( '~depth', '/depth' )
         self.topic_cam_info = rospy.get_param( '~camera_info', '/cam_info' )
+        self.topic_rgb = rospy.get_param( '~rgb', '/camera/saga_arm_d435e/color/image_raw' )
+        self.topic_depth = rospy.get_param( '~depth', '/camera/saga_arm_d435e/aligned_depth_to_color/image_raw' )
+        self.topic_cam_info = rospy.get_param( '~camera_info', '/camera/saga_arm_d435e/aligned_depth_to_color/camera_info' )
         self.bridge = cv_bridge.CvBridge()
         # @todo: make topic storage a queue to be thread save
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
         self.model_file  = rospy.get_param( '~model_file', '/root/scene_analyser/model/fp_ss_model.pth' )
-        self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' )
+        self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' ) # /detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
+        self.metadata_file = rospy.get_param( '~metadata_file', '/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/src/MaskPredictor/data/metadata.pkl' )
         self.mask_predictor = None
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
+        new_thread = threading.Thread( target=self.delayed_init )
+        new_thread.start()
+
+    
+    def delayed_init( self ):
+        time.sleep( 0.5 )
+        import sys
+        import logging
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+            datefmt="%d/%b/%Y %H:%M:%S",
+            stream=sys.stdout)
+        print( 'logger modified' )
+        # we need to set logging output to rosout, otherwise errors in MaskPredictor will only show up in the log file
+        #logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(message)s')
+        logging.getLogger('rosout').setLevel(logging.WARN)
+        logging.getLogger('roserr').setLevel(logging.WARN)
+        time.sleep( 0.5 )
+        logging.error( 'FOOBAR!!!1!' )
         try:
             self.load_mask_predictor()
         except Exception as e:
@@ -55,14 +81,16 @@ class SceneAnalyserNode( object ):
         print( 'setting up publisher' )
         self.advertise()
         print( 'init complete' )
+        
     
     def load_mask_predictor( self ):
         """ loads the mask predictor.
         Note: if this failes the application shuts down silently despite the try block. probably because of a sys.exit call. """
-        return
-        print( 'laoding model' )
+        print( 'loading mask predictor' )
         try:
-            self.mask_predictor = MasksPredictor( self.model_file, self.config_file )
+            time_start = time.time()
+            self.mask_predictor = MasksPredictor( self.model_file, self.config_file, self.metadata_file )
+            print( 'MaskPredictor loaded, time spend: {:.3f}s'.format(time.time()-time_start) )
         except Exception as e:
             print( 'failed to load mask predictor', e )
     
@@ -90,6 +118,8 @@ class SceneAnalyserNode( object ):
             self.publisher_cam_info[self.output_topics[i]].publish( cam_info )
     
     def run( self ):
+        #if not self.mask_predictor:
+        self.load_mask_predictor()
         """ starts the prediction process by converting the ROS messages to OpenCV images and passing the data to the predictor """
         if not self.msg_rgb or not self.msg_depth or not self.msg_cam_info:
             return
@@ -99,7 +129,10 @@ class SceneAnalyserNode( object ):
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
-        if not rgbd_image:
+        if rgbd_image is None:
+            return
+        if not self.mask_predictor: # mask predictor might have been turned off for testing
+            print( 'MaskPredictor not loaded yet' )
             return
         print( 'running mask predictor' )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list )
@@ -111,33 +144,32 @@ class SceneAnalyserNode( object ):
         """ reads the stored ROS image messages. The messages are converted into OpenCV images and merged into an rgbd image which is then returned.
         returns None on error. """
         try:
-            cv_rgb = self.bridge.imgmsg_to_cv(self.msg_rgb, "bgr8") # or rgb8
-            if not cv_rgb:
-                raise Exception('cv_rgb error')
-        except:
-            print( 'failed to convert ROS rgb image to OpenCV' )
+            cv_rgb = self.bridge.imgmsg_to_cv2( self.msg_rgb ) # or rgb8
+        except Exception as e:
+            print( 'failed to convert ROS rgb image to OpenCV', e )
             return None
         try:
-            cv_depth = self.bridge.imgmsg_to_cv(self.msg_depth, "mono8") # alternative: mono16
-            if not cv_depth:
-                raise Exception('cv_depth error')
-        except:
-            print( 'failed to convert ROS depth image to OpenCV' )
+            cv_depth = self.bridge.imgmsg_to_cv2( self.msg_depth )
+        except Exception as e:
+            print( dir(self.msg_depth) )
+            print( 'failed to convert ROS depth image to OpenCV', e )
             return None
         
-        if cv_rgb.shape != cv_depth.shape:
+        if cv_rgb.shape[0:2] != cv_depth.shape[0:2]:
             print( 'rgb and depth image size mismatch. rgb={}, depth={}'.format(cv_rgb.shape, cv_depth.shape) )
             return None
         
-        rgbd_image  = np.dstack( (cv_rgb, cv_depth[:,:,0]) )
+        rgbd_image  = np.dstack( (cv_rgb, cv_depth[:,:]) )
         return rgbd_image
     
     def callback_rgb( self, msg ):
         self.msg_rgb = msg
+        print( 'rgb callback ({}x{}, {})'.format(msg.width, msg.height, msg.encoding) )
         self.run()
     
     def callback_depth( self, msg ):
         self.msg_depth = msg
+        print( 'depth callback ({}x{}, {})'.format(msg.width, msg.height, msg.encoding) )
         self.run()
     
     def callback_cam_info( self, msg ):
