@@ -11,7 +11,7 @@ from scene_analyser.ros_mask_predictor import ROSMaskPredictor
 
 class SceneAnalyserActionServer( object ):
     def __init__( self, action_name="/scene_analyser" ):
-        self.model_file  = rospy.get_param( '~model_file', '/root/scene_analyser/model/fp_ss_model.pth' )
+        self.model_file  = rospy.get_param( '~model_file', '/root/scene_analyser/model/fp_model.pth' )
         self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' ) # /detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
         self.metadata_file = rospy.get_param( '~metadata_file', '/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/src/MaskPredictor/data/metadata.pkl' )
         self.mask_predictor = ROSMaskPredictor( self.model_file, self.config_file, self.metadata_file )
