@@ -80,7 +80,7 @@ RUN  echo "source /opt/cv_bridge_ws/install/setup.bash  --extend" >> ~/.bashrc
 ## adding the pytorch model
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 #RUN  mkdir -p /root/scene_analyser/model  &&  wget https://files.lar.lincoln.ac.uk/s/iKGCwFz8PaNn4GX/download/fp_ss_model.pth /root/scene_analyser/model/
-RUN  mkdir -p /root/scene_analyser/model  &&  wget https://lncn.ac/fp_model /root/scene_analyser/model/
+RUN  mkdir -p /root/scene_analyser/model  &&  wget https://lncn.ac/fp_model.pth /root/scene_analyser/model/
 
 
 
