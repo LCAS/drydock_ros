@@ -41,6 +41,7 @@ class SceneAnalyserNode( object ):
         self.model_file  = rospy.get_param( '~model_file', '/root/scene_analyser/model/fp_model.pth' )
         self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' ) # /detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
         self.metadata_file = rospy.get_param( '~metadata_file', '/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/src/MaskPredictor/data/metadata.pkl' )
+        self.num_classes = int( rospy.get_param( '~num_classes', '3' ) )
         self.mask_predictor = None
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
         new_thread = threading.Thread( target=self.delayed_init )
@@ -89,7 +90,7 @@ class SceneAnalyserNode( object ):
         print( 'loading mask predictor' )
         try:
             time_start = time.time()
-            self.mask_predictor = MasksPredictor( self.model_file, self.config_file, self.metadata_file )
+            self.mask_predictor = MasksPredictor( self.model_file, self.config_file, self.metadata_file, self.num_classes )
             print( 'MaskPredictor loaded, time spend: {:.3f}s'.format(time.time()-time_start) )
         except Exception as e:
             print( 'failed to load mask predictor', e )
