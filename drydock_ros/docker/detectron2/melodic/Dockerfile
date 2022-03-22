@@ -46,6 +46,7 @@ WORKDIR /
 RUN python3 -m venv detectron2_venv --clear --system-site-packages && \
     . detectron2_venv/bin/activate && \
     pip install --upgrade pip wheel setuptools && \
+    pip install --no-cache-dir absl-py pytest scipy sphinx_glpi_theme && \
     pip install --no-cache-dir opencv-python && \
     # At time of writing CUDA 10.2 is the native torch version but we need 11.1 for RTX3000
     # pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html && \
