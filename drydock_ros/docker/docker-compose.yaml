@@ -32,3 +32,21 @@ services:
       - ./:/host
     depends_on:
       - "semantic_segmentation"
+  johann_testing:
+    image: semantic_segmentation_composed
+    build:
+      context: ../..
+      dockerfile: scene_analyser/Dockerfile
+    stdin_open: true # same as -i command line option in docker run
+    tty: true        # same as -t command line option in docker run
+    depends_on:
+      - "semantic_segmentation"
+    restart: on-failure
+    ipc: host
+    ports:
+      - 10003:5232
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]    

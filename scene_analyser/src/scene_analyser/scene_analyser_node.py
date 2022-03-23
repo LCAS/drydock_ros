@@ -40,7 +40,7 @@ class SceneAnalyserNode( object ):
         self.msg_cam_info = None
         self.model_file  = rospy.get_param( '~model_file', '/root/scene_analyser/model/fp_model.pth' )
         self.config_file = rospy.get_param( '~config_file', 'COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml' ) # /detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
-        self.metadata_file = rospy.get_param( '~metadata_file', '/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/src/MaskPredictor/data/metadata.pkl' )
+        self.metadata_file = rospy.get_param( '~metadata_file', '/opt/py3_ws/src/drydock_ros/scene_analyser/src/MaskPredictor/data/metadata.pkl' )
         self.num_classes = int( rospy.get_param( '~num_classes', '3' ) )
         self.mask_predictor = None
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]

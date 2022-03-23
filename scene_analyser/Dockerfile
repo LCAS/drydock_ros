@@ -11,7 +11,8 @@
 ##
 ##     docker run  -it  --gpus all  --entrypoint /bin/bash  -v /tmp/.X11-unix:/tmp/.X11-unix  -v /opt/shared/uol/developer/github.lcas/drydock_ros/scene_analyser/:/opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser  -v /opt/shared/uol/developer/model/:/root/scene_analyser/model  --net=host  -e DISPLAY=$DISPLAY  -v ${HOME}/.Xauthority:/root/.Xauthority  ros_scene_analyser
 
-FROM  melodic_detectron2:local
+#FROM  melodic_detectron2:local
+FROM  lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_server:melodic
 
 
 
@@ -39,8 +40,7 @@ ENV  DISPLAY :0
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## .bashrc modifications
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-WORKDIR  /opt/py3_ws
-RUN  cat src/drydock_ros/drydock_ros/scene_analyser/docker_extra/bashrc.txt >> /root/.bashrc
+RUN  cat /opt/py3_ws/src/drydock_ros/scene_analyser/docker_extra/bashrc.txt >> /root/.bashrc
 
 
 
@@ -58,7 +58,7 @@ RUN  sed -i 's/python37/python3/g' ./vision_opencv/cv_bridge/CMakeLists.txt
 
 # 3) build via catkin_build
 WORKDIR  /opt/cv_bridge_ws
-COPY  drydock_ros/scene_analyser/docker_extra/cv_bridge.build.sh /opt/cv_bridge_ws/cv_bridge.build.sh
+COPY  scene_analyser/docker_extra/cv_bridge.build.sh /opt/cv_bridge_ws/cv_bridge.build.sh
 #RUN  catkin config -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.6m -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.6m.so  -DSETUPTOOLS_DEB_LAYOUT=OFF
 RUN  chmod +x ./cv_bridge.build.sh  &&  ./cv_bridge.build.sh
 
@@ -80,14 +80,14 @@ RUN  echo "source /opt/cv_bridge_ws/install/setup.bash  --extend" >> ~/.bashrc
 ## adding the pytorch model
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 #RUN  mkdir -p /root/scene_analyser/model  &&  wget https://files.lar.lincoln.ac.uk/s/iKGCwFz8PaNn4GX/download/fp_ss_model.pth /root/scene_analyser/model/
-RUN  mkdir -p /root/scene_analyser/model  &&  wget  -O /root/scene_analyser/model/fp_model.pth  https://lncn.ac/fp_model.pth
+RUN  mkdir -p /root/scene_analyser/model  &&  wget  -q -O /root/scene_analyser/model/fp_model.pth  https://lncn.ac/fp_model.pth
 
 
 
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 ## last minute hacks
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
-RUN  chmod +x /opt/py3_ws/src/drydock_ros/drydock_ros/scene_analyser/scripts/*.py
+RUN  chmod +x /opt/py3_ws/src/drydock_ros/scene_analyser/scripts/*.py
 RUN  pip install octomap-python
 #RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octomap ros-melodic-dynamic-edt-3d ros-melodic-octomap-ros ros-melodic-octovis ros-melodic-octomap-msgs  &&  rm -rf /var/lib/apt/lists/*
 RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octomap-msgs  &&  rm -rf /var/lib/apt/lists/*
@@ -99,3 +99,5 @@ RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octom
 
 
 CMD /bin/bash
+#CMD ["/bin/bash", "-c", "tmux"]
+#CMD ["/bin/bash", "-c", "(/usr/local/lib/remote_manager/vnc_runner/noVNC/utils/launch.sh --vnc localhost:5901 --listen 6080 &); rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; (vncserver -localhost yes -depth 24 -geometry 1280x720 -SecurityTypes None -fg :1 &);    ((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; export PATH=/usr/bin:$PATH; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
