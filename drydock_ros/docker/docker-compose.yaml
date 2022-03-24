@@ -43,8 +43,7 @@ services:
       - "semantic_segmentation"
     restart: on-failure
     ipc: host
-    ports:
-      - 10003:5232
+    network_mode: "host"
     deploy:
       resources:
         reservations:

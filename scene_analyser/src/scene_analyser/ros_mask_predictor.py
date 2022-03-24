@@ -16,7 +16,7 @@ import cv_bridge
 
 #from sensor_msgs.msg import CameraInfo, Image
 
-from MaskPredictor.masks_predictor import MasksPredictor, ClassNames
+from MaskPredictor.masks_predictor import MasksPredictor, ClassNames, OutputType
 
 
 
@@ -31,18 +31,22 @@ class ROSMaskPredictor( object ):
         self.mask_predictor = self.load_mask_predictor( model_file, config_file, metadata_file )
     
     def predict( self, msg_img_rgb, msg_img_depth, msg_cam_info=None ):
-        """ runs the mask predictor on the provided data. returns a list of depth images, one for each category/label """
+        """ runs the mask predictor on the provided data. returns a list of depth images, one for each category/label.
+        both input and output images are ros Image messages. conversion to cv2 images is done inside this class.
+        
+        returns: list of ros Image messages """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
-        depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list )
-        return depth_masks
+        depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
+        ros_images = [ self.bridge.cv2_to_imgmsg(d) for d in depth_masks ]
+        return ros_images
     
-    def load_mask_predictor( self, model_file, config_file ):
+    def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes=3 ):
         """ loads the mask predictor.
         Note: if this failes the application may shut down silently despite the try block. this is caused by sys.exit calls inside MasksPredictor. """
         print( 'loading MaskPredictor' )
         try:
             time_start = time.time()
-            mask_predictor = MasksPredictor( model_file, config_file )
+            mask_predictor = MasksPredictor( model_file, config_file, metadata_file, num_classes )
             print( 'MaskPredictor loaded, time spend: {:.3f}s'.format(time.time()-time_start) )
             return mask_predictor
         except Exception as e:
@@ -58,7 +62,8 @@ class ROSMaskPredictor( object ):
             print( 'failed to convert ROS rgb image to OpenCV', e )
             return None
         try:
-            cv_depth = self.bridge.imgmsg_to_cv2(self.msg_depth) # alternative: mono16
+            cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth ) # alternative: mono16
+            cv_depth = cv_depth.astype( 'float32' )
         except:
             print( 'failed to convert ROS depth image to OpenCV' )
             return None

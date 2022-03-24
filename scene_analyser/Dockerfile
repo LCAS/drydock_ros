@@ -97,7 +97,7 @@ RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octom
 ## CMD
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 
-
+WORKDIR  /opt/py3_ws
 CMD /bin/bash
 #CMD ["/bin/bash", "-c", "tmux"]
 #CMD ["/bin/bash", "-c", "(/usr/local/lib/remote_manager/vnc_runner/noVNC/utils/launch.sh --vnc localhost:5901 --listen 6080 &); rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; (vncserver -localhost yes -depth 24 -geometry 1280x720 -SecurityTypes None -fg :1 &);    ((source /detectron2_venv/bin/activate; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch scene_analyser scene_analyser.launch)&) ; sleep 5; (conda deactivate; export PATH=/usr/bin:$PATH; source /opt/ros/melodic/setup.bash; source /opt/py3_ws/install/setup.bash; source /opt/py2_ws/install/setup.bash; ROS_PYTHON_VERSION=3 roslaunch /opt/py3_ws/install/share/drydock_ros/launch/host.launch)"]
