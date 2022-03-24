@@ -37,7 +37,16 @@ class ROSMaskPredictor( object ):
         returns: list of ros Image messages """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
-        ros_images = [ self.bridge.cv2_to_imgmsg(d) for d in depth_masks ]
+        print( '@@@@ depth_masks shape={}'.format(depth_masks.shape) )
+        
+        #depth_mask_uint8 = depth_masks[ :, :, 0 ]
+        ros_images = []
+        for c in range(4):
+            mono_img = depth_masks[:,:,c]
+            print( 'channel {} min={}, max={}'.format(c, mono_img.min(), mono_img.max()) )
+            print( mono_img[240,:] ) # print a single row for debugging
+            ros_images.append( self.bridge.cv2_to_imgmsg(mono_img) )
+        #ros_images = [ self.bridge.cv2_to_imgmsg(d) for d in depth_masks ]
         return ros_images
     
     def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes=3 ):
@@ -52,17 +61,30 @@ class ROSMaskPredictor( object ):
         except Exception as e:
             print( 'failed to load mask predictor', e )
         return None
-
+    
+    def depth_masks_to_ros_image( self, depth_masks ):
+        """ unused atm """
+        yellow = depth_masks[:, :, 0].copy()
+        green = depth_masks[:, :, 1].copy()
+        red = depth_masks[:, :, 2].copy()
+        blue = depth_masks[:, :, 3].copy()
+        
+        bgr_image = depth_masks[:, :, 0:3].copy()
+        bgr_image[:, :, 0] = blue
+        bgr_image[:, :, 1] = green + yellow
+        bgr_image[:, :, 2] = red + yellow
+        return self.bridge.cv2_to_imgmsg( bgr_image )
+    
     def msg_to_cvimage( self, msg_img_rgb, msg_img_depth, msg_cam_info ):
         """ reads the ROS image messagesand converts them into a merged OpenCV rgbd image.
         returns None on error. """
         try:
-            cv_rgb = self.bridge.imgmsg_to_cv2( msg_img_rgb ) # or rgb8
+            cv_rgb = self.bridge.imgmsg_to_cv2( msg_img_rgb )
         except Exception as e:
             print( 'failed to convert ROS rgb image to OpenCV', e )
             return None
         try:
-            cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth ) # alternative: mono16
+            cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth )
             cv_depth = cv_depth.astype( 'float32' )
         except:
             print( 'failed to convert ROS depth image to OpenCV' )
