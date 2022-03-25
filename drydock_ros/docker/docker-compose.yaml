@@ -44,6 +44,8 @@ services:
     restart: on-failure
     ipc: host
     network_mode: "host"
+    volumes:
+      - ./:/host
     deploy:
       resources:
         reservations:
