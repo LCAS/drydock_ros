@@ -9,6 +9,8 @@ services:
     restart: on-failure
     image: lcas.lincoln.ac.uk/lcas/fastpick_semantic_segmentation_server:melodic
     ipc: host
+    volumes:
+      - ./:/host
     ports:
       - 10000:6080
       - 10001:5232
@@ -39,11 +41,15 @@ services:
       dockerfile: scene_analyser/Dockerfile
     stdin_open: true # same as -i command line option in docker run
     tty: true        # same as -t command line option in docker run
-    depends_on:
-      - "semantic_segmentation"
+    # depends_on:
+    #   - "semantic_segmentation"
     restart: on-failure
     ipc: host
-    network_mode: "host"
+    #network_mode: "host"
+    volumes:
+      - ./:/host
+    ports:
+      - 10003:6080
     deploy:
       resources:
         reservations:
