@@ -2,7 +2,7 @@ FROM lcas.lincoln.ac.uk/lcas/novnc-desktop-standalone:bionic
 MAINTAINER Marc Hanheide "marc@hanheide.net"
 
 RUN sudo apt-get -y update && sudo apt-get -y dist-upgrade
-RUN sudo apt-get -y install ros-melodic-mqtt-bridge python-catkin-tools 
+RUN sudo apt-get -y install ros-melodic-desktop ros-melodic-mqtt-bridge python-catkin-tools 
 
 RUN mkdir -p /home/lcas/drydock_ros/src
 WORKDIR /home/lcas/drydock_ros
