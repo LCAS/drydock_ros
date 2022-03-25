@@ -71,6 +71,7 @@ RUN PATH=/usr/bin:$PATH pip install -r https://raw.githubusercontent.com/LCAS/mq
 RUN conda init bash
 
 # install python2 workspace
+RUN DEBIAN_FRONTEND=noninteractive apt update --no-install-recommends
 RUN source /opt/ros/${ROS_DISTRO}/setup.sh && mkdir -p /opt/py2_ws/src && cd /opt/py2_ws/src && catkin_init_workspace \ 
         && git clone --depth 1 -b melodic-devel https://github.com/LCAS/mqtt_bridge.git \
         && rosdep install -y -i --from-paths . \
