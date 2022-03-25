@@ -46,11 +46,7 @@ class SceneAnalyserActionServer( object ):
         img_rgb = goal.rgb
         img_depth = goal.depth
         cam_info = goal.cam_info
-        print( 'img_rgb=', str(img_rgb)[:100] )
-        print( 'img_depth=', str(img_depth)[:300] )
-        print( 'cam_info=', str(cam_info)[:100] )
         masks = self.mask_predictor.predict( img_rgb, img_depth, cam_info )
-        print( 'num_masks={}'.format(len(masks)) )
         """result = action_msgs.semantic_segmentationActionResult()
         print( 'action result={}'.format(result) )
         print( dir(result) )

@@ -37,16 +37,11 @@ class ROSMaskPredictor( object ):
         returns: list of ros Image messages """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
-        print( '@@@@ depth_masks shape={}'.format(depth_masks.shape) )
         
-        #depth_mask_uint8 = depth_masks[ :, :, 0 ]
         ros_images = []
         for c in range(4):
             mono_img = depth_masks[:,:,c]
-            print( 'channel {} min={}, max={}'.format(c, mono_img.min(), mono_img.max()) )
-            print( mono_img[240,:] ) # print a single row for debugging
             ros_images.append( self.bridge.cv2_to_imgmsg(mono_img) )
-        #ros_images = [ self.bridge.cv2_to_imgmsg(d) for d in depth_masks ]
         return ros_images
     
     def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes=3 ):
