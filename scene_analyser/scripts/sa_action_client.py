@@ -10,7 +10,7 @@ import scene_analyser.msg as action_msgs
 import rospy
 import actionlib
 from sensor_msgs.msg import CameraInfo, Image
-
+from std_srvs.srv import Trigger, TriggerResponse
 
 
 class SceneAnalyserActionClient( object ):
@@ -22,6 +22,7 @@ class SceneAnalyserActionClient( object ):
         self.topic_rgb = rospy.get_param( '~topic_rgb', '/camera/saga_arm_d435e/color/image_raw' )
         self.topic_depth = rospy.get_param( '~topic_depth', '/camera/saga_arm_d435e/aligned_depth_to_color/image_raw' )
         self.topic_cam_info = rospy.get_param( '~topic_cam_info', '/camera/saga_arm_d435e/aligned_depth_to_color/camera_info' )
+        self.run_on_service = rospy.get_param( '~run_on_service', True ) 
         self.msg_lock = Lock() # to lock access to the messages while reading/writing messages
         self.msg_rgb = None
         self.msg_depth = None
@@ -30,6 +31,8 @@ class SceneAnalyserActionClient( object ):
         self.subscribe()
         self.action_name = '/scene_analyser'
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
+        if self.run_on_service:
+            self.service_server = rospy.Service(self.action_name + "/trigger" , Trigger, self._trigger_service_cb)
         print( 'scene analyser action client is ready' )
     
     def subscribe( self ):
@@ -74,25 +77,37 @@ class SceneAnalyserActionClient( object ):
         goal.cam_info = msg_cam_info
         print( 'sending goal' )
         self.action_client.send_goal( goal )
-    
+
+    def _trigger_service_cb(self, req):
+        """ called when we receive a service trigger request """
+        res = TriggerResponse()
+        with self.msg_lock:
+            self.check_msgs()
+        res.success = True
+        res.message = "Scene Analysed"
+        return res
+
     def callback_rgb( self, msg ):
         """ called when we receive a new rgb image message """
         with self.msg_lock:
             self.msg_rgb = msg
-            self.check_msgs()
+            if not self.run_on_service:
+                self.check_msgs()
     
     def callback_depth( self, msg ):
         """ called when we receive a new depth image message """
         with self.msg_lock:
             self.msg_depth = msg
-            self.check_msgs()
-    
+            if not self.run_on_service:
+                self.check_msgs()    
+
     def callback_cam_info( self, msg ):
         """ called when we reveive a new CameraInfo message """
         with self.msg_lock:
             self.msg_cam_info = msg
-            self.check_msgs()
-    
+            if not self.run_on_service:
+                self.check_msgs()
+
     def spin( self ):
         """ enteres the main idle loop of the node """
         rospy.spin()
