@@ -44,12 +44,12 @@ services:
     # depends_on:
     #   - "semantic_segmentation"
     restart: on-failure
-    ipc: host
-    #network_mode: "host"
+    #ipc: host
+    network_mode: "host"
     volumes:
       - ./:/host
-    ports:
-      - 10003:6080
+    #ports:
+    #  - 10003:6080
     deploy:
       resources:
         reservations:

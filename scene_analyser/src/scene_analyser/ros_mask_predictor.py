@@ -38,11 +38,13 @@ class ROSMaskPredictor( object ):
         returns: list of ros Image messages """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
-        
+        print( '>>>>> {}'.format( str(msg_img_depth)[:500] ) )
         ros_images = []
         for c in range(4):
             mono_img = depth_masks[:,:,c]
+            mono_img = mono_img.astype(np.uint16)
             ros_images.append( self.bridge.cv2_to_imgmsg(mono_img) )
+        print( '>>>>> {}'.format( str(ros_images[0])[:500] ) )
         return ros_images
     
     def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes ):
@@ -81,7 +83,8 @@ class ROSMaskPredictor( object ):
             return None
         try:
             cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth )
-            cv_depth = cv_depth.astype( 'float32' )
+            cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth, '32FC1' )
+            #cv_depth = cv_depth.astype( 'float32' )
         except:
             print( 'failed to convert ROS depth image to OpenCV' )
             return None
