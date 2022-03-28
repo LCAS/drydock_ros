@@ -44,13 +44,32 @@ services:
     # depends_on:
     #   - "semantic_segmentation"
     restart: on-failure
-    #ipc: host
+    ipc: host
     #network_mode: "host"
     volumes:
       - ./:/host
     ports:
       - 10003:6080
       - 10001:5232
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]    
+  local_testing:
+    # for testing on your local computer with network_mode: "host". not for deployment.
+    image: semantic_segmentation_composed
+    build:
+      context: ../..
+      dockerfile: scene_analyser/Dockerfile
+    stdin_open: true # same as -i command line option in docker run
+    tty: true        # same as -t command line option in docker run
+    # depends_on:
+    #   - "semantic_segmentation"
+    restart: on-failure
+    network_mode: "host"
+    volumes:
+      - ./:/host
     deploy:
       resources:
         reservations:
