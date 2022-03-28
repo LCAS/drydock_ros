@@ -13,7 +13,7 @@ services:
       - ./:/host
     ports:
       - 10000:6080
-      - 10001:5232
+      - 10004:5232
     deploy:
       resources:
         reservations:
@@ -45,11 +45,12 @@ services:
     #   - "semantic_segmentation"
     restart: on-failure
     #ipc: host
-    network_mode: "host"
+    #network_mode: "host"
     volumes:
       - ./:/host
-    #ports:
-    #  - 10003:6080
+    ports:
+      - 10003:6080
+      - 10001:5232
     deploy:
       resources:
         reservations:
