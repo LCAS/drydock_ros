@@ -24,9 +24,9 @@ mqtt:
     host: $(arg mqtt_bridge_ip)
     port: $(arg mqtt_bridge_port)
     keepalive: 60
-# Default is json serialiser, msgpack is more efficient
-#serializer: msgpack:dumps
-#deserializer: msgpack:loads
+  # Default is json serialiser, msgpack is more efficient
+  serializer: msgpack:dumps
+  deserializer: msgpack:loads
 bridge:
   ### INCOMING from server
   # Status
