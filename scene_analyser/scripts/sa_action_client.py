@@ -115,7 +115,10 @@ class SceneAnalyserActionClient( object ):
         with self.msg_lock:
             result = self.check_msgs()
         response.success = result
-        response.message = "Scene Analysed"
+        if result:
+            response.message = "Scene Analysed"
+        else: 
+            response.message = "Scene Analying Failed"
         return response
 
     def callback_rgb( self, msg ):
