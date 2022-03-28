@@ -100,6 +100,14 @@ class SceneAnalyserActionClient( object ):
         print( 'sending goal' )
         self.action_client.send_goal( goal )
         self.action_client.wait_for_result(timeout=self.action_timeout)
+        if self.action_client.get_state() == 3: #TODO Return False on Service Call if fails 
+            self._pub_results(self.action_client.get_result())
+
+    def _pub_results(self, result):
+        """ Split Result Array and Publish on Topics """
+        for i, image in enumerate(result.depth):
+            publisher = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1)
+            publisher.publish(image)
 
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
