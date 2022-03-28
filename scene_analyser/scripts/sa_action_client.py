@@ -23,6 +23,7 @@ class SceneAnalyserActionClient( object ):
         self.topic_depth = rospy.get_param( '~topic_depth', '/camera/saga_arm_d435e/aligned_depth_to_color/image_raw' )
         self.topic_cam_info = rospy.get_param( '~topic_cam_info', '/camera/saga_arm_d435e/aligned_depth_to_color/camera_info' )
         self.msg_lock = Lock() # to lock access to the messages while reading/writing messages
+        self.action_lock = Lock()
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
@@ -77,9 +78,12 @@ class SceneAnalyserActionClient( object ):
         goal.rgb = msg_rgb
         goal.depth = msg_depth
         goal.cam_info = msg_cam_info
-        print( 'sending goal' )
-        self.action_client.send_goal( goal )
-        self.action_client.wait_for_result()
+        with self.action_lock:
+            print( 'sending goal' )
+            self.action_client.send_goal( goal )
+            print( 'wait for result' )
+            self.action_client.wait_for_result()
+            print( 'got result')
     
     def callback_rgb( self, msg ):
         """ called when we receive a new rgb image message """
