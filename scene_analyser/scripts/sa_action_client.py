@@ -29,6 +29,7 @@ class SceneAnalyserActionClient( object ):
         self.msg_cam_info = None
         self.use_multithreading = False
         self.time_tolerance = rospy.Duration( 0.0 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
+        self.action_timeout = rospy.Duration( 10.0 ) # Timeout Before the client cancels the goal
         self.subscribe()
         self.action_name = '/scene_analyser'
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
@@ -98,7 +99,15 @@ class SceneAnalyserActionClient( object ):
         goal.cam_info = msg_cam_info
         print( 'sending goal' )
         self.action_client.send_goal( goal )
-        self.action_client.wait_for_result()
+        self.action_client.wait_for_result(timeout=self.action_timeout)
+        if self.action_client.get_state() == 3: #TODO Return False on Service Call if fails 
+            self._pub_results(self.action_client.get_result())
+
+    def _pub_results(self, result):
+        """ Split Result Array and Publish on Topics """
+        for i, image in enumerate(result.depth):
+            publisher = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1)
+            publisher.publish(image)
 
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
@@ -106,7 +115,10 @@ class SceneAnalyserActionClient( object ):
         with self.msg_lock:
             result = self.check_msgs()
         response.success = result
-        response.message = "Scene Analysed"
+        if result:
+            response.message = "Scene Analysed"
+        else: 
+            response.message = "Scene Analying Failed"
         return response
 
     def callback_rgb( self, msg ):
