@@ -13,7 +13,7 @@ services:
       - ./:/host
     ports:
       - 10000:6080
-      - 10001:5232
+      - 10004:5232
     deploy:
       resources:
         reservations:
@@ -50,6 +50,7 @@ services:
       - ./:/host
     ports:
       - 10003:6080
+      - 10001:5232
     deploy:
       resources:
         reservations:
