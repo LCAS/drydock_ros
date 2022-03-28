@@ -39,11 +39,17 @@ class ROSMaskPredictor( object ):
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
         ros_images = []
-        for c in range(4):
+        for c in range( len(depth_masks) ):
             mono_img = depth_masks[:,:,c]
             mono_img = mono_img.astype(np.uint16)
-            ros_images.append( self.bridge.cv2_to_imgmsg(mono_img) )
+            mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
+            self.copy_msg_header( msg_img_depth, mask_img_msg )
+            ros_images.append( mask_img_msg )
         return ros_images
+    
+    def copy_msg_header( self, source, dest ):
+        dest.header.stamp = source.header.stamp
+        dest.header.frame_id = source.header.frame_id
     
     def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes ):
         """ loads the mask predictor.
