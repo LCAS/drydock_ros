@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 import time
-import logging
+#import logging
 
 import numpy as np
 import cv_bridge
@@ -24,11 +24,12 @@ from MaskPredictor.masks_predictor import MasksPredictor, ClassNames, OutputType
 class ROSMaskPredictor( object ):
     """ this class takes ros image messages and runs the MasksPredictor on the data. convertion between ros messages and opencv image objects is done here as well. """
     
-    def __init__( self, model_file, config_file, metadata_file ):
+    def __init__( self, model_file, config_file, metadata_file, num_classes=3 ):
         """ note: model_file and config_file are strings, not file objects. """
         self.bridge = cv_bridge.CvBridge()
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
-        self.mask_predictor = self.load_mask_predictor( model_file, config_file, metadata_file )
+        self.num_classes = num_classes
+        self.mask_predictor = self.load_mask_predictor( model_file, config_file, metadata_file, num_classes )
     
     def predict( self, msg_img_rgb, msg_img_depth, msg_cam_info=None ):
         """ runs the mask predictor on the provided data. returns a list of depth images, one for each category/label.
@@ -44,7 +45,7 @@ class ROSMaskPredictor( object ):
             ros_images.append( self.bridge.cv2_to_imgmsg(mono_img) )
         return ros_images
     
-    def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes=3 ):
+    def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes ):
         """ loads the mask predictor.
         Note: if this failes the application may shut down silently despite the try block. this is caused by sys.exit calls inside MasksPredictor. """
         print( 'loading MaskPredictor' )
@@ -71,7 +72,7 @@ class ROSMaskPredictor( object ):
         return self.bridge.cv2_to_imgmsg( bgr_image )
     
     def msg_to_cvimage( self, msg_img_rgb, msg_img_depth, msg_cam_info ):
-        """ reads the ROS image messagesand converts them into a merged OpenCV rgbd image.
+        """ reads the ROS image messages and converts them into a merged OpenCV rgbd image.
         returns None on error. """
         try:
             cv_rgb = self.bridge.imgmsg_to_cv2( msg_img_rgb )

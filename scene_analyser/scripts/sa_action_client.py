@@ -27,6 +27,7 @@ class SceneAnalyserActionClient( object ):
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
+        self.use_multithreading = False
         self.time_tolerance = rospy.Duration( 0.0 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
         self.subscribe()
         self.action_name = '/scene_analyser'
@@ -78,11 +79,16 @@ class SceneAnalyserActionClient( object ):
             else:
                 self.msg_rgb = None
             return False
-        # we build and send the action goal in a seperate thread with a "copy" of the messages to be able to release the message lock sooner
-        thread = Thread( target=self.send_action_goal, args=(self.msg_rgb, self.msg_depth, self.msg_cam_info) )
-        thread.start()
-        return True
-    
+
+        if self.use_multithreading:
+            # we build and send the action goal in a seperate thread with a "copy" of the messages to be able to release the message lock sooner
+            thread = Thread( target=self.send_action_goal, args=(self.msg_rgb, self.msg_depth, self.msg_cam_info) )
+            thread.start()
+            return True
+        else:
+            self.send_action_goal( self.msg_rgb, self.msg_depth, self.msg_cam_info )
+            return True
+
     def send_action_goal( self, msg_rgb, msg_depth, msg_cam_info ):
         """ sends the action goal based on the provided messages """
         goal = action_msgs.semantic_segmentationGoal()
@@ -92,6 +98,7 @@ class SceneAnalyserActionClient( object ):
         goal.cam_info = msg_cam_info
         print( 'sending goal' )
         self.action_client.send_goal( goal )
+        self.action_client.wait_for_result()
 
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
