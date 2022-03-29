@@ -23,24 +23,26 @@ class SceneAnalyserActionClient( object ):
         self.topic_depth = rospy.get_param( '~topic_depth', '/camera/saga_arm_d435e/aligned_depth_to_color/image_raw' )
         self.topic_cam_info = rospy.get_param( '~topic_cam_info', '/camera/saga_arm_d435e/aligned_depth_to_color/camera_info' )
         self.run_on_service = rospy.get_param( '~run_on_service', True ) 
+        self.check_msg_age = rospy.get_param( '~check_msg_age', True ) 
         self.msg_lock = Lock() # to lock access to the messages while reading/writing messages
         self.action_lock = Lock()
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
         self.use_multithreading = False
-        self.time_tolerance = rospy.Duration( 0.0 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
+        self.time_tolerance = rospy.Duration( 0.1 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
+        self.action_timeout = rospy.Duration( 10.0 ) # Timeout Before the client cancels the goal
         self.subscribe()
         self.action_name = '/scene_analyser'
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
         if self.run_on_service:
-            self.service_server = rospy.Service(self.action_name + "/trigger" , Trigger, self._trigger_service_cb)
+            self.service_server = rospy.Service( self.action_name + "/trigger" , Trigger, self._trigger_service_cb )
         print( 'scene analyser action client is ready' )
     
     def subscribe( self ):
         """ subscribes to the relevant topics """
         print( 'subscribing to topics:' )
-        print( '  - "{}"'.format(self.topic_rgb) )
+        print( '  - "{}"'.format( self.topic_rgb) )
         rospy.Subscriber( self.topic_rgb, Image, self.callback_rgb )
         print( '  - "{}"'.format(self.topic_depth) )
         rospy.Subscriber( self.topic_depth, Image, self.callback_depth )
@@ -54,6 +56,8 @@ class SceneAnalyserActionClient( object ):
 
     def msg_old(self , msg, timeout=3):
         """ checks the ros Time of the provided messge is not outdated """
+        if not self.check_msg_age:
+            return True
         stamp = msg.header.stamp
         current = rospy.Time.now()
         diff = current.secs - stamp.secs
@@ -72,9 +76,10 @@ class SceneAnalyserActionClient( object ):
         time_depth = self.msg_time( self.msg_depth )
         time_delta = abs( time_rgb - time_depth )
         if not self.msg_old(self.msg_rgb):
-            print( 'msgs outdated', )
+            print( 'messages are too old', )
             return False
         if time_delta > self.time_tolerance:
+            # if the time difference is too large we drop the older message:
             if time_rgb > time_depth:
                 self.msg_depth = None
             else:
@@ -103,14 +108,25 @@ class SceneAnalyserActionClient( object ):
             print( 'wait for result' )
             self.action_client.wait_for_result()
             print( 'got result')
-    
+
+    def _pub_results(self, result, msg_cam_info):
+        """ Split Result Array and Publish on Topics """
+        for i, image in enumerate(result.depth):
+            publisher_image = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1 )
+            publisher_image.publish( image )
+            publisher_info = rospy.Publisher( self.action_name + "/" + str(i) + "/camera_info", CameraInfo, queue_size=1 )
+            publisher_info.publish( msg_cam_info )
+
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
         response = TriggerResponse()
         with self.msg_lock:
             result = self.check_msgs()
         response.success = result
-        response.message = "Scene Analysed"
+        if result:
+            response.message = "Scene Analysed"
+        else: 
+            response.message = "Scene Analying Failed"
         return response
 
     def callback_rgb( self, msg ):

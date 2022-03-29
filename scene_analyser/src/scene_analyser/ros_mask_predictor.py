@@ -28,6 +28,7 @@ class ROSMaskPredictor( object ):
         """ note: model_file and config_file are strings, not file objects. """
         self.bridge = cv_bridge.CvBridge()
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
+        self.class_labels = [ ClassNames(c).name for c in self.class_list ]
         self.num_classes = num_classes
         self.mask_predictor = self.load_mask_predictor( model_file, config_file, metadata_file, num_classes )
     
@@ -38,17 +39,23 @@ class ROSMaskPredictor( object ):
         returns: list of ros Image messages """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
-        
         ros_images = []
         for c in range(4):
             mono_img = depth_masks[:,:,c]
-            ros_images.append( self.bridge.cv2_to_imgmsg(mono_img) )
-        return ros_images
+            mono_img = mono_img.astype(np.uint16)
+            mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
+            self.copy_msg_header( msg_img_depth, mask_img_msg )
+            ros_images.append( mask_img_msg )
+        return ros_images, self.class_labels
+    
+    def copy_msg_header( self, source, dest ):
+        dest.header.stamp = source.header.stamp
+        dest.header.frame_id = source.header.frame_id
     
     def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes ):
         """ loads the mask predictor.
         Note: if this failes the application may shut down silently despite the try block. this is caused by sys.exit calls inside MasksPredictor. """
-        print( 'loading MaskPredictor' )
+        print( 'loading MaskPredictor, labels={}'.format(self.class_labels) )
         try:
             time_start = time.time()
             mask_predictor = MasksPredictor( model_file, config_file, metadata_file, num_classes )
@@ -81,7 +88,8 @@ class ROSMaskPredictor( object ):
             return None
         try:
             cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth )
-            cv_depth = cv_depth.astype( 'float32' )
+            cv_depth = self.bridge.imgmsg_to_cv2( msg_img_depth, '32FC1' )
+            #cv_depth = cv_depth.astype( 'float32' )
         except:
             print( 'failed to convert ROS depth image to OpenCV' )
             return None
