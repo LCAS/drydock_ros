@@ -28,7 +28,7 @@ class SceneAnalyserActionClient( object ):
         self.msg_depth = None
         self.msg_cam_info = None
         self.use_multithreading = False
-        self.time_tolerance = rospy.Duration( 0.0 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
+        self.time_tolerance = rospy.Duration( 0.1 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
         self.action_timeout = rospy.Duration( 10.0 ) # Timeout Before the client cancels the goal
         self.subscribe()
         self.action_name = '/scene_analyser'
@@ -101,13 +101,15 @@ class SceneAnalyserActionClient( object ):
         self.action_client.send_goal( goal )
         self.action_client.wait_for_result(timeout=self.action_timeout)
         if self.action_client.get_state() == 3: #TODO Return False on Service Call if fails 
-            self._pub_results(self.action_client.get_result())
+            self._pub_results(self.action_client.get_result(), msg_cam_info)
 
-    def _pub_results(self, result):
+    def _pub_results(self, result, msg_cam_info):
         """ Split Result Array and Publish on Topics """
         for i, image in enumerate(result.depth):
-            publisher = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1)
-            publisher.publish(image)
+            publisher_image = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1)
+            publisher_image.publish(image)
+            publisher_info = rospy.Publisher( self.action_name + "/" + str(i) + "/camera_info", CameraInfo, queue_size=1)
+            publisher_info.publish(msg_cam_info)
 
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
