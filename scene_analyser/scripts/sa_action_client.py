@@ -23,6 +23,7 @@ class SceneAnalyserActionClient( object ):
         self.topic_depth = rospy.get_param( '~topic_depth', '/camera/saga_arm_d435e/aligned_depth_to_color/image_raw' )
         self.topic_cam_info = rospy.get_param( '~topic_cam_info', '/camera/saga_arm_d435e/aligned_depth_to_color/camera_info' )
         self.run_on_service = rospy.get_param( '~run_on_service', True ) 
+        self.check_msg_age = rospy.get_param( '~check_msg_age', True ) 
         self.msg_lock = Lock() # to lock access to the messages while reading/writing messages
         self.msg_rgb = None
         self.msg_depth = None
@@ -34,13 +35,13 @@ class SceneAnalyserActionClient( object ):
         self.action_name = '/scene_analyser'
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
         if self.run_on_service:
-            self.service_server = rospy.Service(self.action_name + "/trigger" , Trigger, self._trigger_service_cb)
+            self.service_server = rospy.Service( self.action_name + "/trigger" , Trigger, self._trigger_service_cb )
         print( 'scene analyser action client is ready' )
     
     def subscribe( self ):
         """ subscribes to the relevant topics """
         print( 'subscribing to topics:' )
-        print( '  - "{}"'.format(self.topic_rgb) )
+        print( '  - "{}"'.format( self.topic_rgb) )
         rospy.Subscriber( self.topic_rgb, Image, self.callback_rgb )
         print( '  - "{}"'.format(self.topic_depth) )
         rospy.Subscriber( self.topic_depth, Image, self.callback_depth )
@@ -54,6 +55,8 @@ class SceneAnalyserActionClient( object ):
 
     def msg_old(self , msg, timeout=3):
         """ checks the ros Time of the provided messge is not outdated """
+        if not self.check_msg_age:
+            return True
         stamp = msg.header.stamp
         current = rospy.Time.now()
         diff = current.secs - stamp.secs
@@ -72,9 +75,10 @@ class SceneAnalyserActionClient( object ):
         time_depth = self.msg_time( self.msg_depth )
         time_delta = abs( time_rgb - time_depth )
         if not self.msg_old(self.msg_rgb):
-            print( 'msgs outdated', )
+            print( 'messages are too old', )
             return False
         if time_delta > self.time_tolerance:
+            # if the time difference is too large we drop the older message:
             if time_rgb > time_depth:
                 self.msg_depth = None
             else:
@@ -99,17 +103,17 @@ class SceneAnalyserActionClient( object ):
         goal.cam_info = msg_cam_info
         print( 'sending goal' )
         self.action_client.send_goal( goal )
-        self.action_client.wait_for_result(timeout=self.action_timeout)
+        self.action_client.wait_for_result( timeout=self.action_timeout )
         if self.action_client.get_state() == 3: #TODO Return False on Service Call if fails 
-            self._pub_results(self.action_client.get_result(), msg_cam_info)
+            self._pub_results( self.action_client.get_result(), msg_cam_info )
 
     def _pub_results(self, result, msg_cam_info):
         """ Split Result Array and Publish on Topics """
         for i, image in enumerate(result.depth):
-            publisher_image = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1)
-            publisher_image.publish(image)
-            publisher_info = rospy.Publisher( self.action_name + "/" + str(i) + "/camera_info", CameraInfo, queue_size=1)
-            publisher_info.publish(msg_cam_info)
+            publisher_image = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1 )
+            publisher_image.publish( image )
+            publisher_info = rospy.Publisher( self.action_name + "/" + str(i) + "/camera_info", CameraInfo, queue_size=1 )
+            publisher_info.publish( msg_cam_info )
 
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
@@ -125,7 +129,6 @@ class SceneAnalyserActionClient( object ):
 
     def callback_rgb( self, msg ):
         """ called when we receive a new rgb image message """
-        print( 'client - callback_rgb' )
         with self.msg_lock:
             self.msg_rgb = msg
             if not self.run_on_service:
@@ -133,7 +136,6 @@ class SceneAnalyserActionClient( object ):
     
     def callback_depth( self, msg ):
         """ called when we receive a new depth image message """
-        #print( 'client - callback_depth' )
         with self.msg_lock:
             self.msg_depth = msg
             if not self.run_on_service:
@@ -141,7 +143,6 @@ class SceneAnalyserActionClient( object ):
 
     def callback_cam_info( self, msg ):
         """ called when we reveive a new CameraInfo message """
-        #print( 'client - callback_cam_info' )
         with self.msg_lock:
             self.msg_cam_info = msg
             if not self.run_on_service:

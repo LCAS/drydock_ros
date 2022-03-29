@@ -40,7 +40,7 @@ class ROSMaskPredictor( object ):
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS )
         ros_images = []
-        for c in range( len(depth_masks) ):
+        for c in range(4):
             mono_img = depth_masks[:,:,c]
             mono_img = mono_img.astype(np.uint16)
             mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
