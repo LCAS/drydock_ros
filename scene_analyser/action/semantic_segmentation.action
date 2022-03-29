@@ -4,13 +4,15 @@
 Header header
 sensor_msgs/Image rgb
 sensor_msgs/Image depth
-sensor_msgs/CameraInfo cam_info
+sensor_msgs/CameraInfo cam_info # cam info for depth image
 int32[] classes
 ---
 # result definition
 # returns an array of depth images, one for each requested class in the same order as specified in 'classes' during the request
 Header header
 sensor_msgs/Image[] depth
+sensor_msgs/CameraInfo cam_info
+string[] labels
 ---
 # feedback
 # unused for now. we might change this if the need arises

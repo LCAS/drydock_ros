@@ -63,7 +63,6 @@ class SceneAnalyserNode( object ):
         logging.getLogger('rosout').setLevel(logging.WARN)
         logging.getLogger('roserr').setLevel(logging.WARN)
         time.sleep( 0.5 )
-        logging.error( 'FOOBAR!!!1!' )
         try:
             self.load_mask_predictor()
         except Exception as e:

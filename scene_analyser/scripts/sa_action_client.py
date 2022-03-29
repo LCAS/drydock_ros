@@ -123,6 +123,7 @@ class SceneAnalyserActionClient( object ):
 
     def callback_rgb( self, msg ):
         """ called when we receive a new rgb image message """
+        print( 'client - callback_rgb' )
         with self.msg_lock:
             self.msg_rgb = msg
             if not self.run_on_service:
@@ -130,6 +131,7 @@ class SceneAnalyserActionClient( object ):
     
     def callback_depth( self, msg ):
         """ called when we receive a new depth image message """
+        #print( 'client - callback_depth' )
         with self.msg_lock:
             self.msg_depth = msg
             if not self.run_on_service:
@@ -137,6 +139,7 @@ class SceneAnalyserActionClient( object ):
 
     def callback_cam_info( self, msg ):
         """ called when we reveive a new CameraInfo message """
+        #print( 'client - callback_cam_info' )
         with self.msg_lock:
             self.msg_cam_info = msg
             if not self.run_on_service:

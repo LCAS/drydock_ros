@@ -28,6 +28,7 @@ class ROSMaskPredictor( object ):
         """ note: model_file and config_file are strings, not file objects. """
         self.bridge = cv_bridge.CvBridge()
         self.class_list = [ ClassNames.STRAWBERRY, ClassNames.CANOPY, ClassNames.RIGID_STRUCT, ClassNames.BACKGROUND ]
+        self.class_labels = [ ClassNames(c).name for c in self.class_list ]
         self.num_classes = num_classes
         self.mask_predictor = self.load_mask_predictor( model_file, config_file, metadata_file, num_classes )
     
@@ -45,7 +46,7 @@ class ROSMaskPredictor( object ):
             mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
             self.copy_msg_header( msg_img_depth, mask_img_msg )
             ros_images.append( mask_img_msg )
-        return ros_images
+        return ros_images, self.class_labels
     
     def copy_msg_header( self, source, dest ):
         dest.header.stamp = source.header.stamp
@@ -54,7 +55,7 @@ class ROSMaskPredictor( object ):
     def load_mask_predictor( self, model_file, config_file, metadata_file, num_classes ):
         """ loads the mask predictor.
         Note: if this failes the application may shut down silently despite the try block. this is caused by sys.exit calls inside MasksPredictor. """
-        print( 'loading MaskPredictor' )
+        print( 'loading MaskPredictor, labels={}'.format(self.class_labels) )
         try:
             time_start = time.time()
             mask_predictor = MasksPredictor( model_file, config_file, metadata_file, num_classes )
