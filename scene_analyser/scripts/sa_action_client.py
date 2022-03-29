@@ -25,6 +25,7 @@ class SceneAnalyserActionClient( object ):
         self.run_on_service = rospy.get_param( '~run_on_service', True ) 
         self.check_msg_age = rospy.get_param( '~_check_msg_age', True ) 
         self.msg_lock = Lock() # to lock access to the messages while reading/writing messages
+        self.action_lock = Lock()
         self.msg_rgb = None
         self.msg_depth = None
         self.msg_cam_info = None
@@ -101,11 +102,12 @@ class SceneAnalyserActionClient( object ):
         goal.rgb = msg_rgb
         goal.depth = msg_depth
         goal.cam_info = msg_cam_info
-        print( 'sending goal' )
-        self.action_client.send_goal( goal )
-        self.action_client.wait_for_result( timeout=self.action_timeout )
-        if self.action_client.get_state() == 3: #TODO Return False on Service Call if fails 
-            self._pub_results( self.action_client.get_result(), msg_cam_info )
+        with self.action_lock:
+            print( 'sending goal' )
+            self.action_client.send_goal( goal )
+            print( 'wait for result' )
+            self.action_client.wait_for_result()
+            print( 'got result')
 
     def _pub_results(self, result, msg_cam_info):
         """ Split Result Array and Publish on Topics """
