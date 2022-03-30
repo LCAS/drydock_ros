@@ -31,7 +31,7 @@ class SceneAnalyserActionClient( object ):
         self.msg_cam_info = None
         self.use_multithreading = False
         self.time_tolerance = rospy.Duration( 0.1 ) # a time stamp difference greater than this between rgb and depth image will cause the older message to be discarded
-        self.action_timeout = rospy.Duration( 10.0 ) # Timeout Before the client cancels the goal
+        self.action_timeout = rospy.Duration( 10.0 ) # timeout Before the client cancels the goal
         self.subscribe()
         self.action_name = '/scene_analyser'
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
@@ -71,7 +71,6 @@ class SceneAnalyserActionClient( object ):
         if not self.msg_rgb  or  not self.msg_depth  or  not self.msg_cam_info:
             print( 'msgs not recieved', )
             return False
-        print( 'check_msgs', )
         time_rgb = self.msg_time( self.msg_rgb )
         time_depth = self.msg_time( self.msg_depth )
         time_delta = abs( time_rgb - time_depth )
