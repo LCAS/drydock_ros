@@ -34,6 +34,8 @@ The action client listens to camera topics (rgb, depth, & CameraInfo) and tries 
 - **topic_rgb**: topic name of the rgb image, default is *"/camera/saga_arm_d435e/color/image_raw"*
 - **topic_depth**: topic name for the depth image, default is *"/camera/saga_arm_d435e/aligned_depth_to_color/image_raw"*
 - **topic_cam_info**: topic name for the depth image's camera info, default is *"/camera/saga_arm_d435e/aligned_depth_to_color/camera_info"*
+- **run_on_service**: if set to true, we start a service '/trigger' that will start the action message, otherwise an action message is send whenever new data is available. Default is "True"
+- **check_msg_age**: if set to true, messages are ignored if the latest rgb image message is older than 3s. Default is "True"
 
 
 ## How to build and run the scene analyser
