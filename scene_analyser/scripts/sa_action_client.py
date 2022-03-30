@@ -23,7 +23,7 @@ class SceneAnalyserActionClient( object ):
         self.topic_depth = rospy.get_param( '~topic_depth', '/camera/saga_arm_d435e/aligned_depth_to_color/image_raw' )
         self.topic_cam_info = rospy.get_param( '~topic_cam_info', '/camera/saga_arm_d435e/aligned_depth_to_color/camera_info' )
         self.run_on_service = rospy.get_param( '~run_on_service', True ) 
-        self.check_msg_age = rospy.get_param( '~_check_msg_age', True ) 
+        self.check_msg_age = rospy.get_param( '~check_msg_age', True ) 
         self.msg_lock = Lock() # to lock access to the messages while reading/writing messages
         self.action_lock = Lock()
         self.msg_rgb = None
@@ -126,7 +126,7 @@ class SceneAnalyserActionClient( object ):
         if result:
             response.message = "Scene Analysed"
         else: 
-            response.message = "Scene Analying Failed"
+            response.message = "Scene Analysing Failed"
         return response
 
     def callback_rgb( self, msg ):
