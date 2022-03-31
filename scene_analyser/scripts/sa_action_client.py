@@ -104,17 +104,24 @@ class SceneAnalyserActionClient( object ):
         with self.action_lock:
             print( 'sending goal' )
             self.action_client.send_goal( goal )
-            print( 'wait for result' )
-            self.action_client.wait_for_result()
-            print( 'got result')
+            print( 'Wait For Result From Server' )
+            self.action_client.wait_for_result(timeout=self.action_timeout)
+            if self.action_client.get_state() == 3: #TODO Return False on Service Call if fails 
+                print( 'Got Result From Server')
+                self._pub_results(self.action_client.get_result(), msg_cam_info)
+            else:
+                print("Server Error: Action Timeout")
 
     def _pub_results(self, result, msg_cam_info):
         """ Split Result Array and Publish on Topics """
-        for i, image in enumerate(result.depth):
-            publisher_image = rospy.Publisher( self.action_name + "/" + str(i) + "/image_raw", Image, queue_size=1 )
-            publisher_image.publish( image )
-            publisher_info = rospy.Publisher( self.action_name + "/" + str(i) + "/camera_info", CameraInfo, queue_size=1 )
-            publisher_info.publish( msg_cam_info )
+        if len(result.labels) == len(result.depth):
+            for label, image in result.labels, result.depth:
+                publisher_image = rospy.Publisher( self.action_name + "/" + label + "/image_raw", Image, queue_size=1 )
+                publisher_image.publish( image )
+                publisher_info = rospy.Publisher( self.action_name + "/" + label + "/camera_info", CameraInfo, queue_size=1 )
+                publisher_info.publish( msg_cam_info )
+        else:
+            print("Server Error: Labels And Images Do Not Match")
 
     def _trigger_service_cb(self, req):
         """ called when we receive a service trigger request """
