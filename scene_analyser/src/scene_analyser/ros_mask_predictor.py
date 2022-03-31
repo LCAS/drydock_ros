@@ -36,24 +36,33 @@ class ROSMaskPredictor( object ):
         """ runs the mask predictor on the provided data. returns a list of depth images, one for each category/label.
         both input and output images are ros Image messages. conversion to cv2 images is done inside this class.
         
-        returns: list of ros Image messages """
+        returns:
+            ros_depth_images: list of ros Image messages. same as the input depth image, but every pixel that is not part of the label is set to zero
+            ros_rgb_image: same deal as above, but as rgb images
+            class_label: list of string of the class labels. same order as the rest of the lists here
+            label_image: a ros image message that contains color-coded classes """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks, unused = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS, ClassNames.ALL )
-        rgb_masks, unused = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS, ClassNames.ALL )
+        unused, rgb_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.COLOR_MASKS, ClassNames.ALL )
+        #rgb_masks = [ np.array(m) for m in rgb_masks ]
         ros_depth_images = []
         ros_rgb_images = []
         for c in range(4):
+            # depth images
             mono_img = depth_masks[:,:,c]
             mono_img = mono_img.astype(np.uint16)
             mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
             self.copy_msg_header( msg_img_depth, mask_img_msg )
             ros_depth_images.append( mask_img_msg )
-            mono_img = rgb_masks[:,:,c]
-            mono_img = mono_img.astype(np.uint16)
-            mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
-            self.copy_msg_header( msg_img_depth, mask_img_msg )
+            # rgb images:
+            rgb_img = rgb_masks[c]
+            #rgb_img = rgb_masks[:,:,c]
+            rgb_img = rgb_img.astype(np.uint8)
+            mask_img_msg = self.bridge.cv2_to_imgmsg( rgb_img, 'rgb8' )
+            #self.copy_msg_header( msg_img_depth, mask_img_msg )
             ros_rgb_images.append( mask_img_msg )
         label_image = self.depth_masks_to_ros_image( depth_masks )
+        #print( 'label_image={}'.format(str(label_image)[:500]) )
         return ros_depth_images, ros_rgb_images, self.class_labels, label_image
     
     def copy_msg_header( self, source, dest ):
@@ -74,7 +83,7 @@ class ROSMaskPredictor( object ):
         return None
     
     def depth_masks_to_ros_image( self, depth_masks ):
-        """ unused atm """
+        """ creates a color-coded label image (ros image message). every pixel has one of four colors, based on the associated label that applies to that particualr pixel """
         yellow = depth_masks[:, :, 0].copy()
         green = depth_masks[:, :, 1].copy()
         red = depth_masks[:, :, 2].copy()
@@ -84,7 +93,7 @@ class ROSMaskPredictor( object ):
         bgr_image[:, :, 0] = blue
         bgr_image[:, :, 1] = green + yellow
         bgr_image[:, :, 2] = red + yellow
-        return self.bridge.cv2_to_imgmsg( bgr_image )
+        return self.bridge.cv2_to_imgmsg( bgr_image.astype(np.uint8), 'bgr8' )
     
     def msg_to_cvimage( self, msg_img_rgb, msg_img_depth, msg_cam_info ):
         """ reads the ROS image messages and converts them into a merged OpenCV rgbd image.
