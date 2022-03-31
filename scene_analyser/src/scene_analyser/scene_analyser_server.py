@@ -49,7 +49,7 @@ class SceneAnalyserActionServer( object ):
         img_rgb = goal.rgb
         img_depth = goal.depth
         cam_info = goal.cam_info
-        masks, labels = self.mask_predictor.predict( img_rgb, img_depth, cam_info )
+        depth_images, rgb_images, labels, label_image = self.mask_predictor.predict( img_rgb, img_depth, cam_info )
         """result = action_msgs.semantic_segmentationActionResult()
         print( 'action result={}'.format(result) )
         print( dir(result) )
@@ -58,13 +58,15 @@ class SceneAnalyserActionServer( object ):
         print( 'sending action result' )
         """
         result = action_msgs.semantic_segmentationResult()
-        result.depth = masks
+        result.depth = depth_images
         result.labels = labels
         result.cam_info = cam_info
         self.action_server.set_succeeded( result=result )
         if self.publish_mask_images:
-            for i in range(len(masks)):
-                self.publish( masks[i], i )
+            for i in range(len(depth_images)):
+                self.publish( depth_images[i], 'depth/{}'.format(i) )
+                self.publish( rgb_images[i], 'rgb/{}'.format(i) )
+            self.publish( label_image, 'labels' )
     
     def spin( self ):
         rospy.spin()

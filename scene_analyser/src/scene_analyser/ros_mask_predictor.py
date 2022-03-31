@@ -38,15 +38,23 @@ class ROSMaskPredictor( object ):
         
         returns: list of ros Image messages """
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
-        depth_masks, rgb_mask = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS, ClassNames.ALL )
-        ros_images = []
+        depth_masks, unused = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS, ClassNames.ALL )
+        rgb_masks, unused = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS, ClassNames.ALL )
+        ros_depth_images = []
+        ros_rgb_images = []
         for c in range(4):
             mono_img = depth_masks[:,:,c]
             mono_img = mono_img.astype(np.uint16)
             mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
             self.copy_msg_header( msg_img_depth, mask_img_msg )
-            ros_images.append( mask_img_msg )
-        return ros_images, self.class_labels
+            ros_depth_images.append( mask_img_msg )
+            mono_img = rgb_masks[:,:,c]
+            mono_img = mono_img.astype(np.uint16)
+            mask_img_msg = self.bridge.cv2_to_imgmsg( mono_img )
+            self.copy_msg_header( msg_img_depth, mask_img_msg )
+            ros_rgb_images.append( mask_img_msg )
+        label_image = self.depth_masks_to_ros_image( depth_masks )
+        return ros_depth_images, ros_rgb_images, self.class_labels, label_image
     
     def copy_msg_header( self, source, dest ):
         dest.header.stamp = source.header.stamp

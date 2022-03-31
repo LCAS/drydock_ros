@@ -88,7 +88,7 @@ RUN  mkdir -p /root/scene_analyser/model  &&  wget  -q -O /root/scene_analyser/m
 ## last minute hacks
 ## ~~~~~~~~ ~~~~~~~~ ~~~~~~~~ ~~~~~~~~
 RUN  chmod +x /opt/py3_ws/src/drydock_ros/scene_analyser/scripts/*.py
-RUN  pip install  octomap-python  open3d
+#RUN  pip install  octomap-python  open3d
 #RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octomap ros-melodic-dynamic-edt-3d ros-melodic-octomap-ros ros-melodic-octovis ros-melodic-octomap-msgs  &&  rm -rf /var/lib/apt/lists/*
 RUN  apt-get update  &&  apt-get install -y libdynamicedt3d1.8 ros-melodic-octomap-msgs  &&  rm -rf /var/lib/apt/lists/*
 
