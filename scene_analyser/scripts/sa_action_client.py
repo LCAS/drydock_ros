@@ -12,7 +12,6 @@ import actionlib
 from sensor_msgs.msg import CameraInfo, Image
 from std_srvs.srv import Trigger, TriggerResponse
 
-
 class SceneAnalyserActionClient( object ):
     """ The SceneAnalyserActionClient is a node that listend to rgb/depth/cameraInfo messages
     and sends action goals to the action server whenever synchronized rgb/depth images are received. """
@@ -37,11 +36,11 @@ class SceneAnalyserActionClient( object ):
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
         if self.run_on_service:
             self.service_server = rospy.Service( self.action_name + "/trigger" , Trigger, self._trigger_service_cb )
-        print( 'scene analyser action client is ready' )
+        print( 'Scene Analyser Action Client Is Ready' )
     
     def subscribe( self ):
         """ subscribes to the relevant topics """
-        print( 'subscribing to topics:' )
+        print( 'Subscribing To Topics:' )
         print( '  - "{}"'.format( self.topic_rgb) )
         rospy.Subscriber( self.topic_rgb, Image, self.callback_rgb )
         print( '  - "{}"'.format(self.topic_depth) )
@@ -69,13 +68,13 @@ class SceneAnalyserActionClient( object ):
     def check_msgs( self ):
         """ checks if we have two messages (rgb & depth) whose time stamps are close enough to be considered synchronized. if yes, we proceed with processing the messages further, i.e. sending an action goal """
         if not self.msg_rgb  or  not self.msg_depth  or  not self.msg_cam_info:
-            print( 'msgs not recieved', )
+            print("Client Error: Camera Msgs Not Recieved")
             return False
         time_rgb = self.msg_time( self.msg_rgb )
         time_depth = self.msg_time( self.msg_depth )
         time_delta = abs( time_rgb - time_depth )
         if not self.msg_old(self.msg_rgb):
-            print( 'messages are too old', )
+            print("Client Error: Camera Msgs Outdated")
             return False
         if time_delta > self.time_tolerance:
             # if the time difference is too large we drop the older message:
@@ -102,7 +101,7 @@ class SceneAnalyserActionClient( object ):
         goal.depth = msg_depth
         goal.cam_info = msg_cam_info
         with self.action_lock:
-            print( 'sending goal' )
+            print( 'Sending Goal To Server' )
             self.action_client.send_goal( goal )
             print( 'Wait For Result From Server' )
             self.action_client.wait_for_result(timeout=self.action_timeout)
