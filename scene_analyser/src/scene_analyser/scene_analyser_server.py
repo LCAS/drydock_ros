@@ -1,7 +1,5 @@
 #import threading
 
-#import rospy
-#import std_msgs.msg as std_msg
 import rospy
 import actionlib
 from sensor_msgs.msg import Image
@@ -18,7 +16,7 @@ class SceneAnalyserActionServer( object ):
         self.metadata_file = rospy.get_param( '~metadata_file', '/opt/py3_ws/src/drydock_ros/scene_analyser/src/MaskPredictor/data/metadata.pkl' )
         self.num_classes = int( rospy.get_param( '~num_classes', '3' ) )
         self.mask_predictor = ROSMaskPredictor( self.model_file, self.config_file, self.metadata_file, self.num_classes )
-        self.publish_mask_images = True
+        self.publish_mask_images = rospy.get_param( '~publish_masks', 'True' ) # if true, we additionally publish the masks as individual topics
         self.mask_img_publishers = {}
         self.mask_img_topic_prefix = '/masks/'
         self.action_name = action_name
@@ -27,8 +25,6 @@ class SceneAnalyserActionServer( object ):
             action_msgs.semantic_segmentationAction,
             execute_cb=self.execute,
             auto_start = False)
-        # todo: add any initialization that needs to be done before accepting goals
-        
         self.action_server.start()
         print( 'Scene Analyser Action Server is ready' )
         
@@ -45,7 +41,6 @@ class SceneAnalyserActionServer( object ):
     def execute( self, goal ):
         """ executed when the action server receives a goal """
         print( 'scene analyser action server - goal received' )
-        #print( 'goal={}'.format(goal) )
         img_rgb = goal.rgb
         img_depth = goal.depth
         cam_info = goal.cam_info

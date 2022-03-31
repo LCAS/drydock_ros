@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-#import time
+import time
 from threading import Thread, Lock
 
 import scene_analyser.msg as action_msgs
@@ -36,6 +36,7 @@ class SceneAnalyserActionClient( object ):
         self.action_name = '/scene_analyser'
         self.action_client = actionlib.SimpleActionClient( self.action_name, action_msgs.semantic_segmentationAction )
         if self.run_on_service:
+            print( 'running in \'service mode\' - use /trigger to send an action goal' )
             self.service_server = rospy.Service( self.action_name + "/trigger" , Trigger, self._trigger_service_cb )
         print( 'scene analyser action client is ready' )
     
@@ -67,9 +68,10 @@ class SceneAnalyserActionClient( object ):
             return True
 
     def check_msgs( self ):
-        """ checks if we have two messages (rgb & depth) whose time stamps are close enough to be considered synchronized. if yes, we proceed with processing the messages further, i.e. sending an action goal """
+        """ checks if we have two messages (rgb & depth) whose time stamps are close enough to be considered synchronized.
+        if yes, we proceed with processing the messages further, i.e. sending an action goal """
         if not self.msg_rgb  or  not self.msg_depth  or  not self.msg_cam_info:
-            print( 'msgs not recieved', )
+            print( 'messages not recieved', )
             return False
         time_rgb = self.msg_time( self.msg_rgb )
         time_depth = self.msg_time( self.msg_depth )
@@ -102,11 +104,12 @@ class SceneAnalyserActionClient( object ):
         goal.depth = msg_depth
         goal.cam_info = msg_cam_info
         with self.action_lock:
+            time_start = time.time()
             print( 'sending goal' )
             self.action_client.send_goal( goal )
-            print( 'wait for result' )
+            print( 'waiting for result' )
             self.action_client.wait_for_result()
-            print( 'got result')
+            print( 'got result ({:0.3f}s)'.format(time.time()-time_start) )
 
     def _pub_results(self, result, msg_cam_info):
         """ Split Result Array and Publish on Topics """

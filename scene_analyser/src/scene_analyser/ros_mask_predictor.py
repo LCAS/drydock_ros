@@ -3,17 +3,10 @@
 from __future__ import print_function
 
 import time
-#import logging
 
 import numpy as np
 import cv_bridge
 #import rospy
-
-#try:
-#    from Queue import Queue # python 2.7
-#except:
-#    from queue import Queue # python 3+
-
 #from sensor_msgs.msg import CameraInfo, Image
 
 from MaskPredictor.masks_predictor import MasksPredictor, ClassNames, OutputType
@@ -44,7 +37,6 @@ class ROSMaskPredictor( object ):
         rgbd_image = self.msg_to_cvimage( msg_img_rgb, msg_img_depth, msg_cam_info )
         depth_masks, unused = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.DEPTH_MASKS, ClassNames.ALL )
         unused, rgb_masks = self.mask_predictor.get_predictions( rgbd_image, self.class_list, OutputType.COLOR_MASKS, ClassNames.ALL )
-        #rgb_masks = [ np.array(m) for m in rgb_masks ]
         ros_depth_images = []
         ros_rgb_images = []
         for c in range(4):
@@ -56,16 +48,17 @@ class ROSMaskPredictor( object ):
             ros_depth_images.append( mask_img_msg )
             # rgb images:
             rgb_img = rgb_masks[c]
-            #rgb_img = rgb_masks[:,:,c]
             rgb_img = rgb_img.astype(np.uint8)
             mask_img_msg = self.bridge.cv2_to_imgmsg( rgb_img, 'rgb8' )
-            #self.copy_msg_header( msg_img_depth, mask_img_msg )
+            self.copy_msg_header( msg_img_depth, mask_img_msg )
             ros_rgb_images.append( mask_img_msg )
         label_image = self.depth_masks_to_ros_image( depth_masks )
         #print( 'label_image={}'.format(str(label_image)[:500]) )
+        print( 'finished predictions' )
         return ros_depth_images, ros_rgb_images, self.class_labels, label_image
     
     def copy_msg_header( self, source, dest ):
+        """ copies the time stamp and frame_id field from source to dest """
         dest.header.stamp = source.header.stamp
         dest.header.frame_id = source.header.frame_id
     

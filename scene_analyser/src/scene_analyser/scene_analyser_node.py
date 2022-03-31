@@ -1,19 +1,11 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-
 import time
 import threading
 
 import numpy as np
 import cv_bridge
 import rospy
-
-#try:
-#    from Queue import Queue # python 2.7
-#except:
-#    from queue import Queue # python 3+
-
 from sensor_msgs.msg import CameraInfo, Image
 
 from MaskPredictor.masks_predictor import MasksPredictor, ClassNames
@@ -49,19 +41,6 @@ class SceneAnalyserNode( object ):
 
     
     def delayed_init( self ):
-        time.sleep( 0.5 )
-        import sys
-        import logging
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
-            datefmt="%d/%b/%Y %H:%M:%S",
-            stream=sys.stdout)
-        print( 'logger modified' )
-        # we need to set logging output to rosout, otherwise errors in MaskPredictor will only show up in the log file
-        #logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(message)s')
-        logging.getLogger('rosout').setLevel(logging.WARN)
-        logging.getLogger('roserr').setLevel(logging.WARN)
         time.sleep( 0.5 )
         try:
             self.load_mask_predictor()
