@@ -1,0 +1,29 @@
+{
+
+  inet [shape = cloud];
+  inet -- ICT_router;
+
+  network uol {
+      address = "10.101.8.0/21";
+      ICT_router;
+      router_laptop [address = "10.101.8.65"];
+  }
+  network abu_5g_wired {
+      address = "200.200.200.0/23";
+      router_laptop [address = "200.200.200.200"];
+      tower_5g [address = "200.200.200.1"];
+
+  }
+  network wireguard {
+      address = "172.20.0.x/24";
+
+      router_laptop [address = "172.20.0.3"];
+      tower_5g [address = "172.20.0.2"];
+  }
+
+  network private_5g {
+      tower_5g [address = "172.x.x.1"];
+      thorvald_001;
+      thorvald_002;
+  }
+}

@@ -1,0 +1,36 @@
+{
+
+
+  inet [shape = cloud];
+  inet -- ICT_router;
+
+  network uol {
+      address = "10.101.8.0/21";
+      ICT_router;
+      tower_5g;
+      fastpick_server [address = "10.101.63.143"]
+  }
+
+  network private_5g {
+      tower_5g;
+      mifi_router [address = "10.101.64.36"];
+  }
+
+  network robot_mifi {
+      address = "192.168.1.0/24";
+      mifi_router [address = "192.168.1.1"];
+      thorvald_015 [address = "192.168.1.158"];
+  }
+  group robot {
+    color = "#FF7777";
+    fastpick_server;
+  }
+    
+  group edge {
+    color = "#77FF77";
+    mifi_router;
+    thorvald_015;
+  }
+
+
+}
